@@ -200,9 +200,9 @@ class DawnCalendarPlotter:
     def add_title(self, ax: plt.Axes) -> None:
         """Add title and coordinates with custom font."""
         try:
-            font_bold = FontProperties(fname='Arvo-Bold.ttf', weight='bold', size=64)
-            font_regular = FontProperties(fname='Arvo-Regular.ttf', size=20)
-            font_year = FontProperties(fname='Arvo-Regular.ttf', size=48)
+            font_bold = FontProperties(fname='./fonts/Arvo-Bold.ttf', weight='bold', size=64)
+            font_regular = FontProperties(fname='./fonts/Arvo-Regular.ttf', size=20)
+            font_year = FontProperties(fname='./fonts/Arvo-Regular.ttf', size=48)
         except:
             font_bold = FontProperties(weight='bold', size=64)
             font_regular = FontProperties(size=20)
@@ -227,8 +227,8 @@ class DawnCalendarPlotter:
         self.add_title(ax)
         
         plt.subplots_adjust(top=0.9)
-        plt.savefig(f'{self.city.name}_dawn.pdf', bbox_inches='tight', pad_inches=1)
-        plt.savefig(f'{self.city.name}_dawn.png', bbox_inches='tight', pad_inches=1)
+        plt.savefig(f'./pdf/{self.city.name}_dawn.pdf', bbox_inches='tight', pad_inches=1)
+        plt.savefig(f'./png/{self.city.name}_dawn.png', bbox_inches='tight', pad_inches=1)
 
         plt.close()
 
