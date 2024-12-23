@@ -42,7 +42,7 @@ class DawnCalendarPlotter:
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
                            'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
         self.hour_labels = [
-            '4:00AM', '4:15AM', '4:30AM', '4:45AM', '5:00AM', '5:15AM',
+            ' ', '4:15AM', '4:30AM', '4:45AM', '5:00AM', '5:15AM',
             '5:30AM', '5:45AM', '6:00AM', '6:15AM', '6:30AM', '6:45AM'
         ]
         self.hour_ticks = [
@@ -158,17 +158,27 @@ class DawnCalendarPlotter:
 
     def add_time_labels(self, ax: plt.Axes) -> None:
         """Add hour labels and tick marks."""
-        theta = np.linspace(0, 2*np.pi, self.num_points)
+        theta = np.linspace(0, 2 * np.pi, self.num_points)  # Circular positions
+        base_angle_rad = 75 * np.pi / 180  # Base angle in radians for label placement
         
         for i, label in enumerate(self.hour_labels):
-            angle_rad = 75 * np.pi / 180
-            radius = self.hour_ticks[i]
-            ax.text(angle_rad, radius, label,
-                   ha='left', va='center', fontsize=9,
-                   color='#e7fdeb', zorder=10)
+            radius = self.hour_ticks[i]  # Distance from the center
+            angle_rad = base_angle_rad  # Adjust if needed for different placement
             
+            # Convert radians to degrees for label rotation
+            angle_deg = np.degrees(angle_rad)
+            
+            # Add hour label with rotation to align along the radial direction
+            ax.text(angle_rad, radius, label,
+                    ha='left', va='center', fontsize=9,
+                    color='#e7fdeb', zorder=10,
+                    rotation= -(angle_deg - 90),  # Align with the radial direction
+                    rotation_mode='anchor')  # Rotate around the anchor point
+            
+            # Add tick marks around the circle
             ax.fill_between(theta, radius - 0.0001, radius + 0.0001,
-                          color='gray', alpha=0.4, zorder=3, linewidth=0)
+                            color='gray', alpha=0.4, zorder=3, linewidth=0)
+
 
     def add_sunday_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
         """Add Sunday date labels."""
