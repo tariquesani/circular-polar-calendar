@@ -1,5 +1,5 @@
 # City information
 name: "Nagpur"
-coordinates: "21.1458°N, 79.0882°E"
+coordinates: "21.1458° N, 79.0882° E"
 data_file: "data/Nagpur_data.json"
 year: 2025  # Optional, defaults to 2025
