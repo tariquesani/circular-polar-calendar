@@ -39,19 +39,40 @@ class DawnCalendarPlotter:
     def __init__(self, city: CityData):
         self.city = city
         self.num_points = self.city.days_in_year
-        self.start_time = 4 / 24  # 4 AM
-        self.end_time = 7.25 / 24  # 7:15 AM
+        self.dawn_data = self.load_dawn_data()
 
-        # Configuration
+        # Default values
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                              'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-        self.hour_labels = [
-            ' ', '4:15AM', '4:30AM', '4:45AM', '5:00AM', '5:15AM',
-            '5:30AM', '5:45AM', '6:00AM', '6:15AM', '6:30AM', '6:45AM'
-        ]
-        self.hour_ticks = [
-            h/24 for h in [4, 4.25, 4.5, 4.75, 5, 5.25, 5.5, 5.75, 6, 6.25, 6.5, 6.75, 7]
-        ]
+
+        self.start_time = round(min(self.dawn_data.astro_dawn))
+        self.end_time = round(max(self.dawn_data.sunrise))+0.25
+
+        self.hour_labels = self.generate_hour_labels(self.start_time, self.end_time)
+        self.hour_ticks = self.generate_hour_ticks(self.start_time, self.end_time)
+
+    @staticmethod
+    def generate_hour_ticks(start, end):
+        return [h / 24 for h in DawnCalendarPlotter.frange(start, end, 0.25)]
+
+    @staticmethod
+    def frange(start, stop, step):
+        """Generate a range of floating-point numbers."""
+        while start < stop:
+            yield round(start, 10)  # Avoid floating-point imprecision
+            start += step
+
+    @staticmethod
+    def generate_hour_labels(start, end):
+        labels = [' ']  # Start with a blank space
+        time = start + 0.25  # Start from the first quarter past the start time
+        while time < end - 0.25:  # Stop before the end time
+            hours = int(time)
+            minutes = int((time % 1) * 60)
+            am_pm = "AM" if hours < 12 else "PM"
+            labels.append(f"{(hours - 1) % 12 + 1}:{minutes:02}{am_pm}")
+            time += 0.25  # Increment by 15 minutes
+        return labels
 
     @staticmethod
     def find_first_sunday(year: int) -> int:
@@ -106,7 +127,7 @@ class DawnCalendarPlotter:
     def smooth_data(self, data: List[float], num_points: int) -> np.ndarray:
         if not self.city.smoothen:
             return np.array(data)
-        
+
         """Create smooth periodic data using Fourier series."""
         fft_coeffs = np.fft.rfft(data)
         # Keep only lower frequencies
@@ -120,7 +141,7 @@ class DawnCalendarPlotter:
         fig.patch.set_facecolor('#faf0e6')
         ax.set_theta_direction(-1)
         ax.set_theta_offset(np.pi / 2)
-        ax.set_ylim(self.start_time, self.end_time)
+        ax.set_ylim(self.start_time/24, self.end_time/24)
         return fig, ax
 
     def plot_layers(self, ax: plt.Axes, data: DawnData) -> None:
@@ -138,7 +159,7 @@ class DawnCalendarPlotter:
         # Plot dawn layers
         ax.fill_between(
             theta, 0, smooth_data['sunrise'], color='#011F26', zorder=2)
-        ax.fill_between(theta, smooth_data['sunrise'], self.end_time-0.005,
+        ax.fill_between(theta, smooth_data['sunrise'], (self.end_time/24)-0.005,
                         color='#fbba43', zorder=2)
         ax.fill_between(theta, smooth_data['astro_dawn'], smooth_data['nautical_dawn'],
                         color='#092A38', zorder=2, alpha=0.8)
@@ -160,7 +181,7 @@ class DawnCalendarPlotter:
         ax.set_yticklabels([])
 
         # Add labels and lines
-        label_height = self.end_time + 0.006
+        label_height = (self.end_time/24) + 0.006
         for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
             ax.text(angle, label_height, label, ha='center',
                     fontsize=22, color="#2F4F4F", fontweight='bold')
@@ -170,7 +191,7 @@ class DawnCalendarPlotter:
                 line_angle = cumulative_days[i] / self.num_points * 2 * np.pi
             else:
                 line_angle = 2 * np.pi
-            ax.plot([line_angle, line_angle], [self.start_time, self.end_time],
+            ax.plot([line_angle, line_angle], [self.start_time/24, self.end_time/24],
                     color='#02735E', linewidth=0.5, zorder=10)
 
     def add_time_labels(self, ax: plt.Axes) -> None:
@@ -188,7 +209,7 @@ class DawnCalendarPlotter:
 
             # Add hour label with rotation to align along the radial direction
             ax.text(angle_rad, radius, label,
-                    ha='left', va='center', fontsize=9,
+                    ha='left', va='center', fontsize=6,
                     color='#e7fdeb', zorder=10,
                     # Align with the radial direction
                     rotation=-(angle_deg - 90),
@@ -203,7 +224,7 @@ class DawnCalendarPlotter:
         first_sunday = self.find_first_sunday(
             self.city.year)  # Calculate dynamically
         sundays = range(first_sunday, self.num_points, 7)
-        fixed_label_radius = self.end_time - 0.008
+        fixed_label_radius = (self.end_time/24) - 0.008
         cumulative_days = np.cumsum(days_in_month)
 
         for day_index in sundays:
@@ -221,7 +242,7 @@ class DawnCalendarPlotter:
 
     def create_plot(self) -> None:
         """Create and save the complete dawn calendar plot."""
-        data = self.load_dawn_data()
+        data = self.dawn_data
         fig, ax = self.setup_plot()
 
         self.plot_layers(ax, data)
