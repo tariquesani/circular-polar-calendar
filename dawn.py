@@ -14,6 +14,7 @@ class CityData:
     coordinates: str
     data_file: str
     year: int = 2025
+    smoothen: bool = True
 
     @property
     def days_in_year(self) -> int:
@@ -102,8 +103,10 @@ class DawnCalendarPlotter:
         except (json.JSONDecodeError, KeyError, TypeError) as e:
             raise ConfigurationError(f"Error processing sun data: {str(e)}")
 
-    @staticmethod
-    def smooth_data(data: List[float], num_points: int) -> np.ndarray:
+    def smooth_data(self, data: List[float], num_points: int) -> np.ndarray:
+        if not self.city.smoothen:
+            return np.array(data)
+        
         """Create smooth periodic data using Fourier series."""
         fft_coeffs = np.fft.rfft(data)
         # Keep only lower frequencies
