@@ -12,7 +12,6 @@ from datetime import datetime, date, timedelta
 class CityData:
     name: str
     coordinates: str
-    data_file: str
     year: int = 2025
     smoothen: bool = True
 
@@ -69,7 +68,7 @@ class DawnCalendarPlotter:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
 
-            required_fields = ['name', 'coordinates', 'data_file']
+            required_fields = ['name', 'coordinates']
             missing_fields = [
                 field for field in required_fields if field not in config]
             if missing_fields:
@@ -87,7 +86,8 @@ class DawnCalendarPlotter:
     def load_dawn_data(self) -> DawnData:
         """Load and extract only dawn-related data from the JSON file."""
         try:
-            with open(self.city.data_file, 'r') as f:
+            data_file = f"data/{self.city.name}_data.json"
+            with open(data_file, 'r') as f:
                 data = json.load(f)
 
             return DawnData(
