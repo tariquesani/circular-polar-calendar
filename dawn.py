@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.font_manager import FontProperties
 import yaml
+import math
 from datetime import datetime, date, timedelta
+
 
 
 @dataclass
@@ -46,11 +48,15 @@ class DawnCalendarPlotter:
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                              'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
-        self.start_time = round(min(self.dawn_data.astro_dawn))
-        self.end_time = round(max(self.dawn_data.sunrise))+0.25
+        self.start_time = math.floor(min(self.dawn_data.astro_dawn)*4)/4
+        self.end_time = (math.ceil(max(self.dawn_data.sunrise)*4)/4)+0.25
 
-        self.hour_labels = self.generate_hour_labels(self.start_time, self.end_time)
-        self.hour_ticks = self.generate_hour_ticks(self.start_time, self.end_time)
+        print(f"Start time: {self.start_time}, End time: {self.end_time}")
+
+        self.hour_labels = self.generate_hour_labels(
+            self.start_time, self.end_time)
+        self.hour_ticks = self.generate_hour_ticks(
+            self.start_time, self.end_time)
 
     @staticmethod
     def generate_hour_ticks(start, end):
@@ -84,35 +90,13 @@ class DawnCalendarPlotter:
         return (first_sunday - first_day).days
 
     @staticmethod
-    def load_config(config_path: str = "config.yaml") -> CityData:
-        """Load configuration from YAML file."""
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-
-            required_fields = ['name']
-            missing_fields = [
-                field for field in required_fields if field not in config]
-            if missing_fields:
-                raise ConfigurationError(f"Missing required fields: {
-                                         ', '.join(missing_fields)}")
-
-            return CityData(**config)
-        except FileNotFoundError:
-            raise ConfigurationError(
-                f"Configuration file not found: {config_path}")
-        except yaml.YAMLError as e:
-            raise ConfigurationError(
-                f"Error parsing YAML configuration: {str(e)}")
-
-    @staticmethod
     def format_coordinates(coords):
         """ Converts a dictionary with latitude and longitude into a formatted string with degree sign and N/S, E/W postfixes. """
         latitude = coords.get('latitude', 0.0)
         longitude = coords.get('longitude', 0.0)
 
         return f"{abs(latitude):.6f}°{'N' if latitude >= 0 else 'S'},   " \
-                f"{abs(longitude):.6f}°{'E' if longitude >= 0 else 'W'}"
+            f"{abs(longitude):.6f}°{'E' if longitude >= 0 else 'W'}"
 
     def load_dawn_data(self) -> DawnData:
         """Load and extract only dawn-related data from the JSON file."""
@@ -277,7 +261,7 @@ class DawnCalendarPlotter:
 
         ax.text(0.5, 1.18, self.city.name, ha='center', va='center',
                 fontproperties=font_props['bold'], transform=ax.transAxes)
-        
+
         coordinate_label = self.format_coordinates(self.coordinates)
         ax.text(0.5, 1.14, coordinate_label, ha='center', va='center',
                 fontproperties=font_props['regular'], transform=ax.transAxes)
@@ -292,9 +276,32 @@ class DawnCalendarPlotter:
         plt.close()
 
 
+
+def load_config(config_path: str = "config.yaml") -> CityData:
+    """Load configuration from YAML file."""
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+
+        required_fields = ['name']
+        missing_fields = [
+            field for field in required_fields if field not in config]
+        if missing_fields:
+            raise ConfigurationError(f"Missing required fields: {
+                                        ', '.join(missing_fields)}")
+
+        return CityData(**config)
+    except FileNotFoundError:
+        raise ConfigurationError(
+            f"Configuration file not found: {config_path}")
+    except yaml.YAMLError as e:
+        raise ConfigurationError(
+            f"Error parsing YAML configuration: {str(e)}")
+
+
 def main():
     try:
-        city_data = DawnCalendarPlotter.load_config()
+        city_data = load_config()
         plotter = DawnCalendarPlotter(city_data)
         plotter.create_plot()
     except ConfigurationError as e:
