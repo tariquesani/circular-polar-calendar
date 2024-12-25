@@ -11,9 +11,8 @@ from datetime import datetime, date, timedelta
 @dataclass
 class CityData:
     name: str
-    coordinates: str
     year: int = 2025
-    smoothen: bool = True
+    smoothen: bool = False
 
     @property
     def days_in_year(self) -> int:
@@ -28,6 +27,7 @@ class DawnData:
     civil_dawn: List[float]
     nautical_dawn: List[float]
     astro_dawn: List[float]
+    coordinates: dict
 
 
 class ConfigurationError(Exception):
@@ -40,6 +40,7 @@ class DawnCalendarPlotter:
         self.city = city
         self.num_points = self.city.days_in_year
         self.dawn_data = self.load_dawn_data()
+        self.coordinates = self.dawn_data.coordinates
 
         # Default values
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
@@ -89,7 +90,7 @@ class DawnCalendarPlotter:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
 
-            required_fields = ['name', 'coordinates']
+            required_fields = ['name']
             missing_fields = [
                 field for field in required_fields if field not in config]
             if missing_fields:
@@ -104,6 +105,15 @@ class DawnCalendarPlotter:
             raise ConfigurationError(
                 f"Error parsing YAML configuration: {str(e)}")
 
+    @staticmethod
+    def format_coordinates(coords):
+        """ Converts a dictionary with latitude and longitude into a formatted string with degree sign and N/S, E/W postfixes. """
+        latitude = coords.get('latitude', 0.0)
+        longitude = coords.get('longitude', 0.0)
+
+        return f"{abs(latitude):.6f}°{'N' if latitude >= 0 else 'S'},   " \
+                f"{abs(longitude):.6f}°{'E' if longitude >= 0 else 'W'}"
+
     def load_dawn_data(self) -> DawnData:
         """Load and extract only dawn-related data from the JSON file."""
         try:
@@ -116,7 +126,8 @@ class DawnCalendarPlotter:
                 days_in_month=data['days_in_month'],
                 civil_dawn=[d[0] for d in data['civil']],
                 nautical_dawn=[d[0] for d in data['nautical']],
-                astro_dawn=[d[0] for d in data['astro']]
+                astro_dawn=[d[0] for d in data['astro']],
+                coordinates=data['coordinates']
             )
         except FileNotFoundError:
             raise ConfigurationError(f"Sun data file not found: {
@@ -266,7 +277,9 @@ class DawnCalendarPlotter:
 
         ax.text(0.5, 1.18, self.city.name, ha='center', va='center',
                 fontproperties=font_props['bold'], transform=ax.transAxes)
-        ax.text(0.5, 1.14, self.city.coordinates, ha='center', va='center',
+        
+        coordinate_label = self.format_coordinates(self.coordinates)
+        ax.text(0.5, 1.14, coordinate_label, ha='center', va='center',
                 fontproperties=font_props['regular'], transform=ax.transAxes)
         ax.text(0.5, 1.23, str(self.city.year), ha='center', va='center',
                 fontproperties=font_props['year'], transform=ax.transAxes)
