@@ -142,6 +142,12 @@ class DawnCalendarPlotter:
         ax.set_theta_direction(-1)
         ax.set_theta_offset(np.pi / 2)
         ax.set_ylim(self.start_time/24, self.end_time/24)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+
         return fig, ax
 
     def plot_layers(self, ax: plt.Axes, data: DawnData) -> None:
@@ -177,13 +183,12 @@ class DawnCalendarPlotter:
                            2 * np.pi for tick in month_ticks]
 
         ax.set_xticks(month_ticks_rad)
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-
+    
         # Add labels and lines
         label_height = (self.end_time/24) + 0.006
         for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
-            ax.text(angle, label_height, label, ha='center',
+            rotation = (-np.degrees(angle) + 180) % 360 - 180
+            ax.text(angle, label_height, label, ha='center', va='center', rotation=rotation,
                     fontsize=22, color="#2F4F4F", fontweight='bold')
 
             # Add dividing line
@@ -224,7 +229,7 @@ class DawnCalendarPlotter:
         first_sunday = self.find_first_sunday(
             self.city.year)  # Calculate dynamically
         sundays = range(first_sunday, self.num_points, 7)
-        fixed_label_radius = (self.end_time/24) - 0.008
+        fixed_label_radius = (self.end_time/24) - 0.003
         cumulative_days = np.cumsum(days_in_month)
 
         for day_index in sundays:
@@ -238,7 +243,7 @@ class DawnCalendarPlotter:
             rotation = (-np.degrees(angle) + 180) % 360 - 180
             ax.text(angle, fixed_label_radius, str(month_day),
                     ha='center', va='center', fontsize=14, color='#696969',
-                    rotation=rotation, zorder=5, fontweight='bold')
+                    rotation=rotation, zorder=5, fontweight='normal')
 
     def create_plot(self) -> None:
         """Create and save the complete dawn calendar plot."""
