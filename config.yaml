@@ -1,6 +1,5 @@
 # City information
-name: "Nagpur"
-year: 2025  # Optional, defaults to 2025
+name: "Mumbai" # City name
 
 # Rendering options
 smoothen: true # Optional, defaults to false
