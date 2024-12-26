@@ -13,9 +13,10 @@ from matplotlib.font_manager import FontProperties
 @dataclass
 class Config:
     name: str
+    colors: dict
     year: int = 2025
     smoothen: bool = False
-
+    
     @property
     def days_in_year(self) -> int:
         """Calculate number of days in the year accounting for leap years."""
@@ -42,7 +43,8 @@ class DawnCalendarPlotter:
     def __init__(self, city: Config):
         self.city = city
         self.num_points = self.city.days_in_year
-        # Load dawn and twilight data, but now also city coordinates TODO: separate this
+        self.colors = self.city.colors
+        # Load dawn and twilight data, but now also other data TODO: separate this
         self.dawn_data = self.load_dawn_data()
         self.coordinates = self.dawn_data.coordinates
         self.year = self.dawn_data.year
@@ -138,7 +140,7 @@ class DawnCalendarPlotter:
         """Initialize and configure the plot."""
         fig, ax = plt.subplots(
             figsize=(24, 24), subplot_kw=dict(polar=True), dpi=300)
-        fig.patch.set_facecolor('#faf0e6')
+        fig.patch.set_facecolor(self.city.colors['background'])
         ax.set_theta_direction(-1)
         ax.set_theta_offset(np.pi / 2)
         ax.set_ylim(self.start_time/24, self.end_time/24)
@@ -164,15 +166,15 @@ class DawnCalendarPlotter:
 
         # Plot dawn layers
         ax.fill_between(
-            theta, 0, smooth_data['sunrise'], color='#011F26', zorder=2)
+            theta, 0, smooth_data['sunrise'], color=self.colors['night'], zorder=2)
         ax.fill_between(theta, smooth_data['sunrise'], (self.end_time/24)-0.005,
-                        color='#fbba43', zorder=2)
+                        color=self.colors['daylight'], zorder=2)
         ax.fill_between(theta, smooth_data['astro_dawn'], smooth_data['nautical_dawn'],
-                        color='#092A38', zorder=2, alpha=0.8)
+                        color=self.colors['astro'], zorder=2, alpha=0.8)
         ax.fill_between(theta, smooth_data['nautical_dawn'], smooth_data['civil_dawn'],
-                        color='#0A3F4D', zorder=2, alpha=0.7)
+                        color=self.colors['nautical'], zorder=2, alpha=0.7)
         ax.fill_between(theta, smooth_data['civil_dawn'], smooth_data['sunrise'],
-                        color='#1C5C7C', zorder=2, alpha=0.85)
+                        color=self.colors['civil'], zorder=2, alpha=0.85)
 
     def add_month_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
         """Add month labels and dividing lines."""
@@ -185,11 +187,11 @@ class DawnCalendarPlotter:
         ax.set_xticks(month_ticks_rad)
     
         # Add labels and lines
-        label_height = (self.end_time/24) + 0.006
+        label_height = (self.end_time/24) + 0.0025
         for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
             rotation = (-np.degrees(angle) + 180) % 360 - 180
             ax.text(angle, label_height, label, ha='center', va='center', rotation=rotation,
-                    fontsize=22, color="#2F4F4F", fontweight='bold')
+                    fontsize=22, color=self.colors['month_label'], fontweight='bold')
 
             # Add dividing line
             if i < 11:
@@ -197,7 +199,7 @@ class DawnCalendarPlotter:
             else:
                 line_angle = 2 * np.pi
             ax.plot([line_angle, line_angle], [self.start_time/24, self.end_time/24],
-                    color='#02735E', linewidth=0.5, zorder=10)
+                    color=self.colors['divider'], linewidth=0.5, zorder=10)
 
     def add_time_labels(self, ax: plt.Axes) -> None:
         """Add hour labels and tick marks."""
@@ -215,7 +217,7 @@ class DawnCalendarPlotter:
             # Add hour label with rotation to align along the radial direction
             ax.text(angle_rad, radius, label,
                     ha='left', va='center', fontsize=6,
-                    color='#e7fdeb', zorder=10,
+                    color=self.colors['time_label'], zorder=10,
                     # Align with the radial direction
                     rotation=-(angle_deg - 90),
                     rotation_mode='anchor')  # Rotate around the anchor point
@@ -242,7 +244,7 @@ class DawnCalendarPlotter:
 
             rotation = (-np.degrees(angle) + 180) % 360 - 180
             ax.text(angle, fixed_label_radius, str(month_day),
-                    ha='center', va='center', fontsize=14, color='#696969',
+                    ha='center', va='center', fontsize=14, color=self.colors['sunday_label'],
                     rotation=rotation, zorder=5, fontweight='normal')
 
     def create_plot(self) -> None:

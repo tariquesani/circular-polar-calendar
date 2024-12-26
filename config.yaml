@@ -1,5 +1,20 @@
 # City information
-name: "Mumbai" # City name
+name: "Mumbai" # City name, will default to this if no name is provided 
 
 # Rendering options
 smoothen: true # Optional, defaults to false
+
+# Colors for different twilight phases and page background
+# Ensure that all colors are valid hex values
+# Ensure that there are 2 spaces before each color line
+colors:
+  night: "#011F26"
+  daylight: "#fbba43"
+  astro: "#092A38"
+  nautical: "#0A3F4D"
+  civil: "#1C5C7C"
+  background: "#faf0e6"
+  divider: "#02735E"
+  time_label: "#e7fdeb"
+  month_label: "#2F4F4F"
+  sunday_label: "#696969"
