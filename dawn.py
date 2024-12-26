@@ -1,17 +1,17 @@
 import json
-from dataclasses import dataclass
-from typing import List, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.font_manager import FontProperties
+import sys
 import yaml
 import math
 from datetime import datetime, date, timedelta
-
+from dataclasses import dataclass
+from typing import List, Tuple
+from matplotlib.font_manager import FontProperties
 
 
 @dataclass
-class CityData:
+class Config:
     name: str
     year: int = 2025
     smoothen: bool = False
@@ -30,6 +30,7 @@ class DawnData:
     nautical_dawn: List[float]
     astro_dawn: List[float]
     coordinates: dict
+    year: int
 
 
 class ConfigurationError(Exception):
@@ -38,16 +39,19 @@ class ConfigurationError(Exception):
 
 
 class DawnCalendarPlotter:
-    def __init__(self, city: CityData):
+    def __init__(self, city: Config):
         self.city = city
         self.num_points = self.city.days_in_year
+        # Load dawn and twilight data, but now also city coordinates TODO: separate this
         self.dawn_data = self.load_dawn_data()
         self.coordinates = self.dawn_data.coordinates
+        self.year = self.dawn_data.year
 
         # Default values
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                              'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
+        # Calculate plotting time boundaries based on astronomical data.
         self.start_time = math.floor(min(self.dawn_data.astro_dawn)*4)/4
         self.end_time = (math.ceil(max(self.dawn_data.sunrise)*4)/4)+0.25
 
@@ -111,7 +115,8 @@ class DawnCalendarPlotter:
                 civil_dawn=[d[0] for d in data['civil']],
                 nautical_dawn=[d[0] for d in data['nautical']],
                 astro_dawn=[d[0] for d in data['astro']],
-                coordinates=data['coordinates']
+                coordinates=data['coordinates'],
+                year=data['year']
             )
         except FileNotFoundError:
             raise ConfigurationError(f"Sun data file not found: {
@@ -265,7 +270,7 @@ class DawnCalendarPlotter:
         coordinate_label = self.format_coordinates(self.coordinates)
         ax.text(0.5, 1.14, coordinate_label, ha='center', va='center',
                 fontproperties=font_props['regular'], transform=ax.transAxes)
-        ax.text(0.5, 1.23, str(self.city.year), ha='center', va='center',
+        ax.text(0.5, 1.23, str(self.year), ha='center', va='center',
                 fontproperties=font_props['year'], transform=ax.transAxes)
 
         plt.subplots_adjust(top=0.9)
@@ -276,8 +281,7 @@ class DawnCalendarPlotter:
         plt.close()
 
 
-
-def load_config(config_path: str = "config.yaml") -> CityData:
+def load_config(config_path: str = "config.yaml") -> Config:
     """Load configuration from YAML file."""
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
@@ -288,9 +292,9 @@ def load_config(config_path: str = "config.yaml") -> CityData:
             field for field in required_fields if field not in config]
         if missing_fields:
             raise ConfigurationError(f"Missing required fields: {
-                                        ', '.join(missing_fields)}")
+                ', '.join(missing_fields)}")
 
-        return CityData(**config)
+        return Config(**config)
     except FileNotFoundError:
         raise ConfigurationError(
             f"Configuration file not found: {config_path}")
@@ -301,8 +305,13 @@ def load_config(config_path: str = "config.yaml") -> CityData:
 
 def main():
     try:
-        city_data = load_config()
-        plotter = DawnCalendarPlotter(city_data)
+        city_name = sys.argv[1] if len(sys.argv) > 1 else None
+        config = load_config()
+
+        if city_name:
+            config.name = city_name
+
+        plotter = DawnCalendarPlotter(config)
         plotter.create_plot()
     except ConfigurationError as e:
         print(f"Configuration error: {str(e)}")
