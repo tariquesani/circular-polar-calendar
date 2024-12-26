@@ -187,7 +187,8 @@ class DataProcessor:
             'astro': self.interpolator.interpolate_missing_values(raw_data['astro']),
             'moon_phases': self.interpolator.interpolate_missing_values(raw_data['moon_phases']),
             'days_in_month': self.calculator.days_in_month,
-            'coordinates': {'latitude': self.location.latitude, 'longitude': self.location.longitude}
+            'coordinates': {'latitude': self.location.latitude, 'longitude': self.location.longitude},
+            'year': self.year
         }
         return processed_data
 
