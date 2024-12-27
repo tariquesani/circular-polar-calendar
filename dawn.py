@@ -4,7 +4,6 @@ import numpy as np
 import sys
 import yaml
 import math
-import textwrap
 from datetime import datetime, date, timedelta
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -257,27 +256,27 @@ class DawnCalendarPlotter:
         legend_data = [
             {
                 "label": "Daylight",
-                "description": "The sun is above the horizon",
+                "description": "Sun above horizon",
                 "color": self.colors['daylight']
             },
             {
                 "label": "Civil Twilight",
-                "description": "The sun is up to 6° below the horizon",
+                "description": "Sun ≤6° below horizon",
                 "color": self.colors['civil']
             },
             {
                 "label": "Nautical Twilight",
-                "description": "The sun is between 6° and 12° below the horizon",
+                "description": "Sun 6° to 12° below horizon",
                 "color": self.colors['nautical']
             },
             {
                 "label": "Astronomical Twilight",
-                "description": "The sun is between 12° and 18° below the horizon",
+                "description": "Sun 12° to 18° below horizon",
                 "color": self.colors['astro']
             },
             {
                 "label": "Night",
-                "description": "The sun is more than 18° below the horizon",
+                "description": "Sun > 18° below horizon",
                 "color": self.colors['night']
             }
         ]
@@ -305,8 +304,8 @@ class DawnCalendarPlotter:
         # Adjusted y-positions as proportions of the footer height
         circle_radius = 0.015  # Smaller circles
         circle_y = 0.15
-        label_y = 0.12
-        desc_y = 0.113
+        label_y = 0.125
+        desc_y = 0.117
 
         # Draw legend elements
         for x, item in zip(x_positions, legend_data):
@@ -361,7 +360,7 @@ class DawnCalendarPlotter:
                 fontproperties=font_props['bold'], transform=ax.transAxes)
 
         coordinate_label = self.format_coordinates(self.coordinates)
-        ax.text(0.5, 1.14, coordinate_label, ha='center', va='center',
+        ax.text(0.5, 1.13, coordinate_label, ha='center', va='center',
                 fontproperties=font_props['regular'], transform=ax.transAxes)
         ax.text(0.5, 1.23, str(self.year), ha='center', va='center',
                 fontproperties=font_props['year'], transform=ax.transAxes)
