@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import yaml
 import math
+import textwrap
 from datetime import datetime, date, timedelta
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -250,6 +251,88 @@ class DawnCalendarPlotter:
                     ha='center', va='center', fontsize=14, color=self.colors['sunday_label'],
                     rotation=rotation, zorder=5, fontweight='normal')
 
+    def add_footer(self, fig: plt.Figure) -> None:
+        """Add a footer with legend explaining different twilight phases."""
+        # Define labels and descriptions
+        legend_data = [
+            {
+                "label": "Daylight",
+                "description": "The sun is above the horizon",
+                "color": self.colors['daylight']
+            },
+            {
+                "label": "Civil Twilight",
+                "description": "The sun is up to 6° below the horizon",
+                "color": self.colors['civil']
+            },
+            {
+                "label": "Nautical Twilight",
+                "description": "The sun is between 6° and 12° below the horizon",
+                "color": self.colors['nautical']
+            },
+            {
+                "label": "Astronomical Twilight",
+                "description": "The sun is between 12° and 18° below the horizon",
+                "color": self.colors['astro']
+            },
+            {
+                "label": "Night",
+                "description": "The sun is more than 18° below the horizon",
+                "color": self.colors['night']
+            }
+        ]
+
+        # Create footer axes with fixed aspect ratio
+        footer_height = 0.15  # Height of footer as proportion of figure
+        footer_width = 0.8
+        
+        # Calculate the position to center the footer
+        footer_left = (1 - footer_width) / 2
+        footer_bottom = 0.02
+        
+        footer_ax = fig.add_axes([footer_left, footer_bottom, footer_width, footer_height])
+        footer_ax.set_aspect('equal', adjustable='box')  # Force circular shapes
+        footer_ax.axis('off')
+        
+        # Set fixed boundaries
+        footer_ax.set_xlim(0, 1)
+        footer_ax.set_ylim(0, 0.2)
+
+        # Calculate positions
+        num_items = len(legend_data)
+        x_positions = np.linspace(0.1, 0.9, num_items)
+        
+        # Adjusted y-positions as proportions of the footer height
+        circle_radius = 0.015  # Smaller circles
+        circle_y = 0.15
+        label_y = 0.12
+        desc_y = 0.113
+
+        # Draw legend elements
+        for x, item in zip(x_positions, legend_data):
+            # Add colored circle
+            circle = plt.Circle((x, circle_y), circle_radius, 
+                            color=item['color'], 
+                            alpha=1
+                            )
+            footer_ax.add_patch(circle)
+            
+            # Add label with wrapping
+            footer_ax.text(x, label_y, item['label'],
+                        ha='center', va='center',
+                        color=self.colors['title_text'],
+                        fontsize=8,
+                        alpha=0.7, 
+                        fontweight='bold')
+            
+            # Add description with wrapping
+            footer_ax.text(x, desc_y, item['description'],
+                        ha='center', va='center',
+                        color=self.colors['title_text'],
+                        fontsize=6,
+                        alpha=0.5,
+                        wrap=True)
+
     def create_plot(self) -> None:
         """Create and save the complete dawn calendar plot."""
         data = self.dawn_data
@@ -283,7 +366,12 @@ class DawnCalendarPlotter:
         ax.text(0.5, 1.23, str(self.year), ha='center', va='center',
                 fontproperties=font_props['year'], transform=ax.transAxes)
 
-        plt.subplots_adjust(top=0.9)
+        # Add footer
+        self.add_footer(fig)
+
+        # Save plot
+        plt.subplots_adjust(top=0.95, bottom=0.3)
+
         plt.savefig(f'./pdf/{self.city.name}_dawn.pdf',
                     bbox_inches='tight', pad_inches=1)
         plt.savefig(f'./png/{self.city.name}_dawn.png',
