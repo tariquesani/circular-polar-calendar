@@ -205,9 +205,10 @@ class DawnCalendarPlotter:
         """Add hour labels and tick marks."""
         theta = np.linspace(
             0, 2 * np.pi, self.num_points)  # Circular positions
-        base_angle_rad = 75 * np.pi / 180  # Base angle in radians for label placement
+        base_angle_rad = 0 * np.pi / 180  # Base angle in radians for label placement
 
         for i, label in enumerate(self.hour_labels):
+            label = " "+label # Dirty hack to add some space between axes and labels
             radius = self.hour_ticks[i]  # Distance from the center
             angle_rad = base_angle_rad  # Adjust if needed for different placement
 
@@ -219,8 +220,10 @@ class DawnCalendarPlotter:
                     ha='left', va='center', fontsize=6,
                     color=self.colors['time_label'], zorder=10,
                     # Align with the radial direction
-                    rotation=-(angle_deg - 90),
-                    rotation_mode='anchor')  # Rotate around the anchor point
+                    # rotation=-(angle_deg - 90),
+                    # Rotate around the anchor point
+                    # rotation_mode='anchor'
+                    )  
 
             # Add tick marks around the circle
             ax.fill_between(theta, radius - 0.0001, radius + 0.0001,
