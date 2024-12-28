@@ -139,7 +139,7 @@ class DawnCalendarPlotter:
     def setup_plot(self) -> Tuple[plt.Figure, plt.Axes]:
         """Initialize and configure the plot."""
         fig, ax = plt.subplots(
-            figsize=(24, 24), subplot_kw=dict(polar=True), dpi=300)
+            figsize=(24, 24), subplot_kw=dict(polar=True, facecolor=self.city.colors['dial']), dpi=300)
         fig.patch.set_facecolor(self.city.colors['background'])
         ax.set_theta_direction(-1)
         ax.set_theta_offset(np.pi / 2)
