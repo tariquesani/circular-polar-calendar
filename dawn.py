@@ -16,7 +16,7 @@ class Config:
     colors: dict
     year: int = 2025
     smoothen: bool = False
-    
+
     @property
     def days_in_year(self) -> int:
         """Calculate number of days in the year accounting for leap years."""
@@ -149,7 +149,6 @@ class DawnCalendarPlotter:
         ax.set_xticks([])
         ax.set_yticks([])
 
-
         return fig, ax
 
     def plot_layers(self, ax: plt.Axes, data: DawnData) -> None:
@@ -185,7 +184,7 @@ class DawnCalendarPlotter:
                            2 * np.pi for tick in month_ticks]
 
         ax.set_xticks(month_ticks_rad)
-    
+
         # Add labels and lines
         label_height = (self.end_time/24) + 0.0025
         for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
@@ -208,7 +207,7 @@ class DawnCalendarPlotter:
         base_angle_rad = 0 * np.pi / 180  # Base angle in radians for label placement
 
         for i, label in enumerate(self.hour_labels):
-            label = " "+label # Dirty hack to add some space between axes and labels
+            label = " "+label  # Dirty hack to add some space between axes and labels
             radius = self.hour_ticks[i]  # Distance from the center
             angle_rad = base_angle_rad  # Adjust if needed for different placement
 
@@ -223,7 +222,7 @@ class DawnCalendarPlotter:
                     # rotation=-(angle_deg - 90),
                     # Rotate around the anchor point
                     # rotation_mode='anchor'
-                    )  
+                    )
 
             # Add tick marks around the circle
             ax.fill_between(theta, radius - 0.0001, radius + 0.0001,
@@ -284,15 +283,17 @@ class DawnCalendarPlotter:
         # Create footer axes with fixed aspect ratio
         footer_height = 0.15  # Height of footer as proportion of figure
         footer_width = 0.8
-        
+
         # Calculate the position to center the footer
         footer_left = (1 - footer_width) / 2
         footer_bottom = 0.02
-        
-        footer_ax = fig.add_axes([footer_left, footer_bottom, footer_width, footer_height])
-        footer_ax.set_aspect('equal', adjustable='box')  # Force circular shapes
+
+        footer_ax = fig.add_axes(
+            [footer_left, footer_bottom, footer_width, footer_height])
+        # Force circular shapes
+        footer_ax.set_aspect('equal', adjustable='box')
         footer_ax.axis('off')
-        
+
         # Set fixed boundaries
         footer_ax.set_xlim(0, 1)
         footer_ax.set_ylim(0, 0.2)
@@ -300,7 +301,7 @@ class DawnCalendarPlotter:
         # Calculate positions
         num_items = len(legend_data)
         x_positions = np.linspace(0.1, 0.9, num_items)
-        
+
         # Adjusted y-positions as proportions of the footer height
         circle_radius = 0.015  # Smaller circles
         circle_y = 0.15
@@ -310,27 +311,27 @@ class DawnCalendarPlotter:
         # Draw legend elements
         for x, item in zip(x_positions, legend_data):
             # Add colored circle
-            circle = plt.Circle((x, circle_y), circle_radius, 
-                            color=item['color'], 
-                            alpha=1
-                            )
+            circle = plt.Circle((x, circle_y), circle_radius,
+                                color=item['color'],
+                                alpha=1
+                                )
             footer_ax.add_patch(circle)
-            
+
             # Add label with wrapping
             footer_ax.text(x, label_y, item['label'],
-                        ha='center', va='center',
-                        color=self.colors['title_text'],
-                        fontsize=8,
-                        alpha=0.7, 
-                        fontweight='bold')
-            
+                           ha='center', va='center',
+                           color=self.colors['title_text'],
+                           fontsize=8,
+                           alpha=0.7,
+                           fontweight='bold')
+
             # Add description with wrapping
             footer_ax.text(x, desc_y, item['description'],
-                        ha='center', va='center',
-                        color=self.colors['title_text'],
-                        fontsize=6,
-                        alpha=0.5,
-                        wrap=True)
+                           ha='center', va='center',
+                           color=self.colors['title_text'],
+                           fontsize=6,
+                           alpha=0.5,
+                           wrap=True)
 
     def create_plot(self) -> None:
         """Create and save the complete dawn calendar plot."""
