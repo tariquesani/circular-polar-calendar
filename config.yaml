@@ -1,5 +1,5 @@
 # City information
-name: "Mumbai" # City name, will default to this if no name is provided 
+name: "Mumbai" # City name, will default to this if no name is provided
 
 # Rendering options
 smoothen: true # Optional, defaults to false
@@ -7,6 +7,8 @@ smoothen: true # Optional, defaults to false
 # Colors for different twilight phases and page background
 # Ensure that all colors are valid hex values
 # Ensure that there are 2 spaces before each color line
+#
+# Default
 colors:
   night: "#011F26"
   daylight: "#fbba43"
@@ -15,7 +17,38 @@ colors:
   civil: "#1C5C7C"
   background: "#faf0e6"
   divider: "#02735E"
+  dial: "#FFFFFF"
   time_label: "#e7fdeb"
   month_label: "#2F4F4F"
   sunday_label: "#696969"
   title_text: "#000000"
+
+# Iceland
+# colors:
+#   night: "#133052"
+#   daylight: "#e4edf4"
+#   astro: "#35637d"
+#   nautical: "#82a6be"
+#   civil: "#b7cddb"
+#   background: "#faf0e6"
+#   divider: "#02735E"
+#   dial: "#FFFFFF"
+#   time_label: "#e7fdeb"
+#   month_label: "#2F4F4F"
+#   sunday_label: "#696969"
+#   title_text: "#000000"
+
+# Monochrome
+# colors:
+#   night: "#595959"
+#   daylight: "#ffffff"
+#   astro: "#6a6a6a"
+#   nautical: "#7a7a7a"
+#   civil: "#8b8b8b"
+#   background: "#ffffff"
+#   divider: "#02735E"
+#   dial: "#000000"
+#   time_label: "#000000"
+#   month_label: "#505050"
+#   sunday_label: "#696969"
+#   title_text: "#000000"
