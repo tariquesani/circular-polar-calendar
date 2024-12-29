@@ -11,9 +11,8 @@ import json
 from pathlib import Path
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
-import pytz
+from meteostat import Point, Daily
 
-# [Previous Location class implementation remains the same]
 @dataclass
 class Location:
     """Represents a geographical location with timezone information."""
@@ -40,9 +39,11 @@ class Location:
                 raise ValueError(f"Could not find location: {city_name}")
 
             # Get timezone for the coordinates
-            timezone_str = tf.timezone_at(lat=location.latitude, lng=location.longitude)
+            timezone_str = tf.timezone_at(
+                lat=location.latitude, lng=location.longitude)
             if not timezone_str:
-                raise ValueError(f"Could not determine timezone for: {city_name}")
+                raise ValueError(
+                    f"Could not determine timezone for: {city_name}")
 
             # Extract country from address
             country = location.address.split(',')[-1].strip()
@@ -55,7 +56,8 @@ class Location:
                 longitude=location.longitude
             )
         except Exception as e:
-            raise ValueError(f"Error creating location for {city_name}: {str(e)}")
+            raise ValueError(f"Error creating location for {
+                             city_name}: {str(e)}")
 
     def to_location_info(self) -> LocationInfo:
         """Convert to astral LocationInfo object."""
@@ -67,9 +69,10 @@ class Location:
             self.longitude
         )
 
+
 class AstralDataCalculator:
     """Handles calculations of astronomical data for a given location."""
-    
+
     def __init__(self, location: Location, year: int):
         self.location = location
         self.year = year
@@ -82,10 +85,13 @@ class AstralDataCalculator:
     def calculate_sun_data(self, current_date: date) -> Dict[str, float]:
         """Calculate sun-related data for a specific date."""
         try:
-            s = sun(self.city.observer, date=current_date, tzinfo=self.city.tzinfo, dawn_dusk_depression=6)
-            nautical = sun(self.city.observer, date=current_date, tzinfo=self.city.tzinfo, dawn_dusk_depression=12)
-            astro = sun(self.city.observer, date=current_date, tzinfo=self.city.tzinfo, dawn_dusk_depression=18)
-            
+            s = sun(self.city.observer, date=current_date,
+                    tzinfo=self.city.tzinfo, dawn_dusk_depression=6)
+            nautical = sun(self.city.observer, date=current_date,
+                           tzinfo=self.city.tzinfo, dawn_dusk_depression=12)
+            astro = sun(self.city.observer, date=current_date,
+                        tzinfo=self.city.tzinfo, dawn_dusk_depression=18)
+
             return {
                 'sunrise': self._time_to_decimal(s["sunrise"]),
                 'sunset': self._time_to_decimal(s["sunset"]),
@@ -96,7 +102,8 @@ class AstralDataCalculator:
                 'nautical_dusk': self._time_to_decimal(nautical["dusk"]),
                 'astro_dawn': self._time_to_decimal(astro["dawn"]),
                 'astro_dusk': self._time_to_decimal(astro["dusk"]),
-                'moon_phase': moon.phase(current_date)  # Fixed moon phase calculation
+                # Fixed moon phase calculation
+                'moon_phase': moon.phase(current_date)
             }
         except Exception as e:
             print(f"Error calculating data for {current_date}: {e}")
@@ -118,26 +125,70 @@ class AstralDataCalculator:
             'sunrise': [], 'sunset': [], 'noon': [], 'moon_phases': [],
             'civil': [], 'nautical': [], 'astro': []
         }
-        
+
         for month in range(1, 13):
             for day in range(1, self.days_in_month[month - 1] + 1):
                 current_date = date(self.year, month, day)
                 day_data = self.calculate_sun_data(current_date)
-                
+
                 data['sunrise'].append(day_data['sunrise'])
                 data['sunset'].append(day_data['sunset'])
                 data['noon'].append(day_data['noon'])
                 data['moon_phases'].append(day_data['moon_phase'])
-                data['civil'].append((day_data['civil_dawn'], day_data['civil_dusk']))
-                data['nautical'].append((day_data['nautical_dawn'], day_data['nautical_dusk']))
-                data['astro'].append((day_data['astro_dawn'], day_data['astro_dusk']))
-        
+                data['civil'].append(
+                    (day_data['civil_dawn'], day_data['civil_dusk']))
+                data['nautical'].append(
+                    (day_data['nautical_dawn'], day_data['nautical_dusk']))
+                data['astro'].append(
+                    (day_data['astro_dawn'], day_data['astro_dusk']))
+
         return data
 
-# [DataInterpolator class remains exactly the same]
+class WeatherDataCalculator:
+    """Handles calculations of weather data for a given location."""
+    
+    def __init__(self, location: Location, year: int):
+        self.location = location
+        self.year = year
+        
+    def _get_data_year(self) -> int:
+        """Determine which year to use for weather data."""
+        current_year = datetime.now().year
+        if self.year >= current_year:
+            # For future or current year, use the last complete year
+            return current_year - 1
+        return self.year
+        
+    def generate_yearly_weather_data(self) -> Dict[str, List[float]]:
+        """Generate weather data for entire year."""
+        # Create Point for the location
+        location = Point(self.location.latitude, self.location.longitude)
+        
+        # Get appropriate year for data
+        data_year = self._get_data_year()
+        
+        # Set start and end dates for the data year
+        start = datetime(data_year, 1, 1)
+        end = datetime(data_year, 12, 31)
+        
+        # Fetch daily weather data
+        data = Daily(location, start, end)
+        data = data.normalize()
+        data = data.interpolate()
+        data = data.fetch()
+        
+        # Extract temperature and precipitation data
+        weather_data = {
+            'temperature': data['tavg'].tolist(),  # Average temperature
+            'precipitation': data['prcp'].tolist(),  # Precipitation
+            'weather_data_year': data_year  # Include the actual year used for weather data
+        }
+        
+        return weather_data
+
 class DataInterpolator:
     """Handles interpolation of missing astronomical data."""
-    
+
     @staticmethod
     def interpolate_missing_values(times: Union[List[float], List[Tuple[float, float]]]) -> Union[List[float], List[Tuple[float, float]]]:
         """Interpolate missing values in the dataset."""
@@ -157,27 +208,32 @@ class DataInterpolator:
         valid_values = times[valid_indices]
 
         if len(valid_indices) < 2:
-            raise ValueError("Insufficient valid data points for interpolation")
+            raise ValueError(
+                "Insufficient valid data points for interpolation")
 
-        interp_func = interp1d(valid_indices, valid_values, kind='linear', fill_value='extrapolate')
+        interp_func = interp1d(valid_indices, valid_values,
+                               kind='linear', fill_value='extrapolate')
         invalid_indices = np.where(times == -1)[0]
         interpolated_values = interp_func(invalid_indices)
         times[invalid_indices] = interpolated_values
         return times.tolist()
 
-# [DataProcessor class and main() function remain exactly the same]
+
 class DataProcessor:
     """Handles the complete data processing pipeline."""
-    
+
     def __init__(self, city_name: str, year: int):
         self.location = Location.from_city_name(city_name)
-        self.calculator = AstralDataCalculator(self.location, year)
+        self.astralcalculator = AstralDataCalculator(self.location, year)
+        self.weathercalculator = WeatherDataCalculator(self.location, year)
         self.interpolator = DataInterpolator()
         self.year = year
 
     def process_data(self) -> Dict[str, Union[List[float], List[Tuple[float, float]], List[int]]]:
         """Process and interpolate all astronomical data."""
-        raw_data = self.calculator.generate_yearly_data()
+        raw_data = self.astralcalculator.generate_yearly_data()
+        weather_data = self.weathercalculator.generate_yearly_weather_data()
+
         processed_data = {
             'sunrise': self.interpolator.interpolate_missing_values(raw_data['sunrise']),
             'sunset': self.interpolator.interpolate_missing_values(raw_data['sunset']),
@@ -186,46 +242,51 @@ class DataProcessor:
             'nautical': self.interpolator.interpolate_missing_values(raw_data['nautical']),
             'astro': self.interpolator.interpolate_missing_values(raw_data['astro']),
             'moon_phases': self.interpolator.interpolate_missing_values(raw_data['moon_phases']),
-            'days_in_month': self.calculator.days_in_month,
+            'temperature': weather_data['temperature'],  # Already normalized and interpolated
+            'precipitation': weather_data['precipitation'],  # Already normalized and interpolated
+            'weather_data_year': weather_data['weather_data_year'],
+            'days_in_month': self.astralcalculator.days_in_month,
             'coordinates': {'latitude': self.location.latitude, 'longitude': self.location.longitude},
             'year': self.year
         }
         return processed_data
 
+
 def main():
     """Main execution function."""
     import sys
-    
+
     if len(sys.argv) != 3:
-        print("Usage: python script.py <city_name> <year>")
-        print("Example: python script.py 'New York' 2025")
+        print("Usage: python data_generator.py <city_name> <year>")
+        print("Example: python data_generator.py 'New York' 2025")
         sys.exit(1)
-        
+
     city_name = sys.argv[1]
     year = int(sys.argv[2])
-    
+
     try:
         processor = DataProcessor(city_name, year)
         data = processor.process_data()
-        
-        # Create sanitized filename (remove spaces and special characters)
+
         filename = f"data/{city_name}_data.json"
         output_path = Path(filename)
-        
+
         with output_path.open('w') as f:
             json.dump(data, f, indent=4)
         print(f"Data successfully written to {output_path}")
-        
+
         # Print some useful information
         print(f"\nLocation details:")
         print(f"City: {processor.location.name}")
         print(f"Country: {processor.location.country}")
         print(f"Timezone: {processor.location.timezone}")
-        print(f"Coordinates: {processor.location.latitude:.4f}°, {processor.location.longitude:.4f}°")
-        
+        print(f"Coordinates: {processor.location.latitude:.4f}°, {
+              processor.location.longitude:.4f}°")
+
     except Exception as e:
         print(f"Error processing data: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
