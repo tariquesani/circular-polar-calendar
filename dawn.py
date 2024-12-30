@@ -33,6 +33,11 @@ class DawnData:
     coordinates: dict
     year: int
 
+@dataclass
+class WeatherData:
+    temperature: List[float]
+    precipitation: List[float]
+    weather_data_year: int
 
 class ConfigurationError(Exception):
     """Raised when there's an error in configuration file."""
@@ -45,9 +50,14 @@ class DawnCalendarPlotter:
         self.num_points = self.city.days_in_year
         self.colors = self.city.colors
         # Load dawn and twilight data, but now also other data TODO: separate this
-        self.dawn_data = self.load_dawn_data()
+        self.dawn_data, self.weather_data = self.load_data()
         self.coordinates = self.dawn_data.coordinates
         self.year = self.dawn_data.year
+
+        # Add temperature plotting parameters
+        self.temp_radius = 1  # Radius for temperature band
+        self.temp_band_width = 0.1  # Width of temperature band
+        self.n_r = 20  # Number of radial points for smoothness
 
         # Default values
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
@@ -104,14 +114,14 @@ class DawnCalendarPlotter:
         return f"{abs(latitude):.6f}°{'N' if latitude >= 0 else 'S'},   " \
             f"{abs(longitude):.6f}°{'E' if longitude >= 0 else 'W'}"
 
-    def load_dawn_data(self) -> DawnData:
+    def load_data(self) -> Tuple[DawnData, WeatherData]:
         """Load and extract only dawn-related data from the JSON file."""
         try:
             data_file = f"data/{self.city.name}_data.json"
             with open(data_file, 'r') as f:
                 data = json.load(f)
 
-            return DawnData(
+            dawn_data = DawnData(
                 sunrise=data['sunrise'],
                 days_in_month=data['days_in_month'],
                 civil_dawn=[d[0] for d in data['civil']],
@@ -120,6 +130,15 @@ class DawnCalendarPlotter:
                 coordinates=data['coordinates'],
                 year=data['year']
             )
+
+            weather_data = WeatherData(
+                temperature=data['temperature'],
+                precipitation=data['precipitation'],
+                weather_data_year=data['weather_data_year']
+            )
+
+            return dawn_data, weather_data
+
         except FileNotFoundError:
             raise ConfigurationError(f"Sun data file not found: {
                                      self.city.data_file}")
@@ -174,6 +193,47 @@ class DawnCalendarPlotter:
                         color=self.colors['nautical'], zorder=2, alpha=0.7)
         ax.fill_between(theta, smooth_data['civil_dawn'], smooth_data['sunrise'],
                         color=self.colors['civil'], zorder=2, alpha=0.85)
+
+    def plot_temperature(self, ax: plt.Axes, data: WeatherData) -> None:
+        """Plot temperature data as a circular band."""
+        if not hasattr(data, 'temperature') or not data.temperature:
+            print("No temperature data available")
+            return  # Skip if no temperature data available
+            
+        # Create coordinate system for temperature band
+        theta = np.linspace(0, 2*np.pi, self.num_points)
+
+        # Scale the temperature band to fit within the plot's y-limits
+        r_min = self.start_time/24
+        r_max = self.end_time/24
+        r_mid = r_min + (r_max - r_min) * 0.955
+        band_width = (r_max - r_min) * 0.02  # Make band 20% of total range
+        
+        r_temp_grid = np.linspace(
+            r_mid - band_width/2,  # Start band below middle
+            r_mid + band_width/2,  # End band above middle
+            self.n_r
+        )
+        # Normalize temperature data to [0,1] range
+        temp_data = np.array(data.temperature)
+        temp_normalized = (temp_data - np.min(temp_data)) / (np.max(temp_data) - np.min(temp_data))
+        
+        # Create 2D arrays for coloring
+        temp_colors = np.tile(temp_normalized, (self.n_r, 1))
+        
+        # Create meshgrid for plotting
+        THETA, R_TEMP = np.meshgrid(theta, r_temp_grid)
+        
+        # Plot temperature band
+        ax.pcolormesh(
+            THETA, 
+            R_TEMP, 
+            temp_colors,
+            cmap='YlOrRd',  # Red-yellow colormap for temperature
+            shading='gouraud',  # Smooth color interpolation
+            alpha=0.7,  # Slight transparency
+            zorder=9  # Place in front of other elements
+        )
 
     def add_month_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
         """Add month labels and dividing lines."""
@@ -339,6 +399,7 @@ class DawnCalendarPlotter:
         fig, ax = self.setup_plot()
 
         self.plot_layers(ax, data)
+        self.plot_temperature(ax, self.weather_data)
         self.add_month_labels(ax, data.days_in_month)
         self.add_sunday_labels(ax, data.days_in_month)
         self.add_time_labels(ax)
