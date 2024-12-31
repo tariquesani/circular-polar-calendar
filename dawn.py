@@ -214,31 +214,29 @@ class DawnCalendarPlotter:
             r_mid + band_width/2,  # End band above middle
             self.n_r
         )
-        # Normalize temperature data to [0,1] range
-        temp_data = np.array(data.temperature)
-        temp_normalized = (temp_data - np.min(temp_data)) / (np.max(temp_data) - np.min(temp_data))
+        
+        # Store original temperature data for colorbar
+        self.temp_min = np.min(data.temperature)
+        self.temp_max = np.max(data.temperature)
         
         # Create 2D arrays for coloring
-        temp_colors = np.tile(temp_normalized, (self.n_r, 1))
+        temp_colors = np.tile(data.temperature, (self.n_r, 1))
         
         # Create meshgrid for plotting
         THETA, R_TEMP = np.meshgrid(theta, r_temp_grid)
         
         # Plot temperature band
-        temp_plot = ax.pcolormesh(
+        norm = plt.Normalize(self.temp_min, self.temp_max)
+        self.temp_plot = ax.pcolormesh(
             THETA, 
             R_TEMP, 
             temp_colors,
             cmap='YlOrRd',  # Red-yellow colormap for temperature
+            norm=norm,  # Use the same normalization for consistent coloring
             shading='gouraud',  # Smooth color interpolation
-            alpha=0.7,  # Slight transparency
+            # alpha=0.9,  # Slight transparency
             zorder=9  # Place in front of other elements
         )
-
-        # Store temperature data for the colorbar
-        self.temp_plot = temp_plot
-        self.temp_min = np.min(temp_data)
-        self.temp_max = np.max(temp_data)
 
     def add_month_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
         """Add month labels and dividing lines."""
@@ -350,12 +348,13 @@ class DawnCalendarPlotter:
         footer_left = (1 - footer_width) / 2
         footer_bottom = 0.02
 
-        # Create two subfigures in the footer area
+        # Adjust heights and spacing
         legend_height = 0.1  # Height for the twilight legend
-        colorbar_height = 0.03  # Height for the colorbar
+        colorbar_height = 0.005  # Reduced height for the colorbar
+        colorbar_bottom = footer_bottom + 0.04  # Move colorbar up
 
         # Create legend axes
-        legend_ax = fig.add_axes([footer_left, footer_bottom + colorbar_height + 0.02, 
+        legend_ax = fig.add_axes([footer_left, colorbar_bottom + colorbar_height - 0.03, 
                                 footer_width, legend_height])
         legend_ax.set_aspect('equal', adjustable='box')
         legend_ax.axis('off')
@@ -394,17 +393,25 @@ class DawnCalendarPlotter:
 
         # Create colorbar axes and colorbar
         if hasattr(self, 'temp_plot'):
-            colorbar_ax = fig.add_axes([footer_left, footer_bottom, footer_width, colorbar_height])
+            # Match the x-coordinates with the legend
+            colorbar_ax = fig.add_axes([footer_left + 0.2, colorbar_bottom, 
+                                    footer_width - 0.4, colorbar_height])
             colorbar = plt.colorbar(self.temp_plot, cax=colorbar_ax, 
-                                orientation='horizontal', 
-                                label='Temperature (°C)')
+                                orientation='horizontal')
             
-            # Customize colorbar appearance
-            colorbar.ax.tick_params(labelsize=8)
-            colorbar.set_label('Temperature (°C)', size=10, color=self.colors['title_text'])
+            # Remove outline and ticks
+            colorbar.outline.set_visible(False)
+            colorbar.ax.tick_params(size=0)
+            
+            # Add temperature label above the colorbar
+            colorbar_ax.text(0.5, 1.5, 'Temperature (°C)', 
+                            ha='center', va='bottom',
+                            transform=colorbar_ax.transAxes,
+                            color=self.colors['title_text'],
+                            fontsize=8)
             
             # Set custom ticks to show min, middle, and max temperatures
-            ticks = [self.temp_min, (self.temp_min + self.temp_max)/2, self.temp_max]
+            ticks = np.linspace(self.temp_min, self.temp_max, 5)
             colorbar.set_ticks(ticks)
             colorbar.set_ticklabels([f'{t:.1f}°C' for t in ticks])
 
