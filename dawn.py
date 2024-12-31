@@ -225,7 +225,7 @@ class DawnCalendarPlotter:
         THETA, R_TEMP = np.meshgrid(theta, r_temp_grid)
         
         # Plot temperature band
-        ax.pcolormesh(
+        temp_plot = ax.pcolormesh(
             THETA, 
             R_TEMP, 
             temp_colors,
@@ -234,6 +234,11 @@ class DawnCalendarPlotter:
             alpha=0.7,  # Slight transparency
             zorder=9  # Place in front of other elements
         )
+
+        # Store temperature data for the colorbar
+        self.temp_plot = temp_plot
+        self.temp_min = np.min(temp_data)
+        self.temp_max = np.max(temp_data)
 
     def add_month_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
         """Add month labels and dividing lines."""
@@ -308,9 +313,8 @@ class DawnCalendarPlotter:
             ax.text(angle, fixed_label_radius, str(month_day),
                     ha='center', va='center', fontsize=14, color=self.colors['sunday_label'],
                     rotation=rotation, zorder=5, fontweight='normal')
-
     def add_footer(self, fig: plt.Figure) -> None:
-        """Add a footer with legend explaining different twilight phases."""
+        """Add a footer with legend explaining different twilight phases and temperature scale."""
         # Define labels and descriptions
         legend_data = [
             {
@@ -340,58 +344,69 @@ class DawnCalendarPlotter:
             }
         ]
 
-        # Create footer axes with fixed aspect ratio
-        footer_height = 0.15  # Height of footer as proportion of figure
+        # Create footer axes
+        footer_height = 0.15
         footer_width = 0.8
-
-        # Calculate the position to center the footer
         footer_left = (1 - footer_width) / 2
         footer_bottom = 0.02
 
-        footer_ax = fig.add_axes(
-            [footer_left, footer_bottom, footer_width, footer_height])
-        # Force circular shapes
-        footer_ax.set_aspect('equal', adjustable='box')
-        footer_ax.axis('off')
+        # Create two subfigures in the footer area
+        legend_height = 0.1  # Height for the twilight legend
+        colorbar_height = 0.03  # Height for the colorbar
 
-        # Set fixed boundaries
-        footer_ax.set_xlim(0, 1)
-        footer_ax.set_ylim(0, 0.2)
+        # Create legend axes
+        legend_ax = fig.add_axes([footer_left, footer_bottom + colorbar_height + 0.02, 
+                                footer_width, legend_height])
+        legend_ax.set_aspect('equal', adjustable='box')
+        legend_ax.axis('off')
 
-        # Calculate positions
+        # Set fixed boundaries for legend
+        legend_ax.set_xlim(0, 1)
+        legend_ax.set_ylim(0, 0.2)
+
+        # Draw legend elements
         num_items = len(legend_data)
         x_positions = np.linspace(0.1, 0.9, num_items)
-
-        # Adjusted y-positions as proportions of the footer height
-        circle_radius = 0.015  # Smaller circles
+        circle_radius = 0.015
         circle_y = 0.15
         label_y = 0.125
         desc_y = 0.117
 
-        # Draw legend elements
         for x, item in zip(x_positions, legend_data):
-            # Add colored circle
             circle = plt.Circle((x, circle_y), circle_radius,
-                                color=item['color'],
-                                alpha=1
-                                )
-            footer_ax.add_patch(circle)
+                            color=item['color'],
+                            alpha=1)
+            legend_ax.add_patch(circle)
 
-            # Add label with wrapping
-            footer_ax.text(x, label_y, item['label'],
-                           ha='center', va='center',
-                           color=self.colors['title_text'],
-                           fontsize=8,
-                           alpha=0.7,
-                           fontweight='bold')
+            legend_ax.text(x, label_y, item['label'],
+                        ha='center', va='center',
+                        color=self.colors['title_text'],
+                        fontsize=8,
+                        alpha=0.7,
+                        fontweight='bold')
 
-            # Add description with wrapping
-            footer_ax.text(x, desc_y, item['description'],
-                           ha='center', va='center',
-                           color=self.colors['title_text'],
-                           fontsize=6,
-                           alpha=0.5,
-                           wrap=True)
+            legend_ax.text(x, desc_y, item['description'],
+                        ha='center', va='center',
+                        color=self.colors['title_text'],
+                        fontsize=6,
+                        alpha=0.5,
+                        wrap=True)
+
+        # Create colorbar axes and colorbar
+        if hasattr(self, 'temp_plot'):
+            colorbar_ax = fig.add_axes([footer_left, footer_bottom, footer_width, colorbar_height])
+            colorbar = plt.colorbar(self.temp_plot, cax=colorbar_ax, 
+                                orientation='horizontal', 
+                                label='Temperature (°C)')
+            
+            # Customize colorbar appearance
+            colorbar.ax.tick_params(labelsize=8)
+            colorbar.set_label('Temperature (°C)', size=10, color=self.colors['title_text'])
+            
+            # Set custom ticks to show min, middle, and max temperatures
+            ticks = [self.temp_min, (self.temp_min + self.temp_max)/2, self.temp_max]
+            colorbar.set_ticks(ticks)
+            colorbar.set_ticklabels([f'{t:.1f}°C' for t in ticks])
 
     def create_plot(self) -> None:
         """Create and save the complete dawn calendar plot."""
