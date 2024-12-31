@@ -2,7 +2,7 @@
 name: "Mumbai" # City name, will default to this if no name is provided via CLI
 
 # Rendering options
-smoothen: true # Optional, defaults to false
+smoothen: true # Optional, defaults to false, Keep false for places with Daylight Saving Time
 
 # Colors for different twilight phases and page background
 # Ensure that all colors are valid hex values
@@ -22,6 +22,7 @@ colors:
   month_label: "#2F4F4F"
   sunday_label: "#696969"
   title_text: "#000000"
+  temperature: "YlOrRd" # Colormap for temperature band, see https://matplotlib.org/stable/gallery/color/colormap_reference.html 
 
 # Iceland
 # colors:
@@ -37,6 +38,7 @@ colors:
 #   month_label: "#2F4F4F"
 #   sunday_label: "#696969"
 #   title_text: "#000000"
+#   temperature: "Blues" # Try "coolwarm"
 
 # Monochrome
 # colors:
@@ -52,3 +54,4 @@ colors:
 #   month_label: "#505050"
 #   sunday_label: "#696969"
 #   title_text: "#000000"
+#   temperature: "Greys"

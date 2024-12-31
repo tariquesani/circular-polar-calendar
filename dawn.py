@@ -231,7 +231,7 @@ class DawnCalendarPlotter:
             THETA, 
             R_TEMP, 
             temp_colors,
-            cmap='YlOrRd',  # Red-yellow colormap for temperature
+            cmap= self.colors['temperature'],  # Red-yellow colormap for temperature
             norm=norm,  # Use the same normalization for consistent coloring
             shading='gouraud',  # Smooth color interpolation
             # alpha=0.9,  # Slight transparency
@@ -404,7 +404,7 @@ class DawnCalendarPlotter:
             colorbar.ax.tick_params(size=0)
             
             # Add temperature label above the colorbar
-            colorbar_ax.text(0.5, 1.5, 'Temperature (°C)', 
+            colorbar_ax.text(0.5, 1.5, 'Average temperature (°C)', 
                             ha='center', va='bottom',
                             transform=colorbar_ax.transAxes,
                             color=self.colors['title_text'],
@@ -414,6 +414,11 @@ class DawnCalendarPlotter:
             ticks = np.linspace(self.temp_min, self.temp_max, 5)
             colorbar.set_ticks(ticks)
             colorbar.set_ticklabels([f'{t:.1f}°C' for t in ticks])
+
+            colorbar.ax.tick_params(labelsize=6)  # Adjust tick label size
+            for label in colorbar.ax.get_xticklabels():
+                label.set_alpha(0.5)  # Add transparency
+                label.set_color(self.colors['title_text'])  # Match color with other text
 
     def create_plot(self) -> None:
         """Create and save the complete dawn calendar plot."""
