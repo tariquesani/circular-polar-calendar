@@ -33,11 +33,13 @@ class DawnData:
     coordinates: dict
     year: int
 
+
 @dataclass
 class WeatherData:
     temperature: List[float]
     precipitation: List[float]
     weather_data_year: int
+
 
 class ConfigurationError(Exception):
     """Raised when there's an error in configuration file."""
@@ -182,10 +184,14 @@ class DawnCalendarPlotter:
             'astro_dawn': self.smooth_data(data.astro_dawn, self.num_points) / 24
         }
 
+        # Calculate relative offset based on time range
+        time_range = self.end_time - self.start_time
+        daylight_offset = time_range/24 * 0.03  # 3% of time range
+
         # Plot dawn layers
         ax.fill_between(
             theta, 0, smooth_data['sunrise'], color=self.colors['night'], zorder=2)
-        ax.fill_between(theta, smooth_data['sunrise'], (self.end_time/24)-0.005,
+        ax.fill_between(theta, smooth_data['sunrise'], (self.end_time/24)-daylight_offset,
                         color=self.colors['daylight'], zorder=2)
         ax.fill_between(theta, smooth_data['astro_dawn'], smooth_data['nautical_dawn'],
                         color=self.colors['astro'], zorder=2, alpha=0.8)
@@ -199,39 +205,43 @@ class DawnCalendarPlotter:
         if not hasattr(data, 'temperature') or not data.temperature:
             print("No temperature data available")
             return  # Skip if no temperature data available
-            
+
         # Create coordinate system for temperature band
         theta = np.linspace(0, 2*np.pi, self.num_points)
 
         # Scale the temperature band to fit within the plot's y-limits
         r_min = self.start_time/24
         r_max = self.end_time/24
-        r_mid = r_min + (r_max - r_min) * 0.955
-        band_width = (r_max - r_min) * 0.02  # Make band 20% of total range
-        
+
+        # Calculate relative offsets based on time range
+        time_range = self.end_time - self.start_time
+        temp_offset = time_range/24 * 0.042  # Adjust percentage as needed
+        band_width = time_range/24 * 0.02   # Adjust percentage as needed
+        r_mid = r_max - temp_offset  # Dynamic midpoint based on time range
+
         r_temp_grid = np.linspace(
             r_mid - band_width/2,  # Start band below middle
             r_mid + band_width/2,  # End band above middle
             self.n_r
         )
-        
+
         # Store original temperature data for colorbar
         self.temp_min = np.min(data.temperature)
         self.temp_max = np.max(data.temperature)
-        
+
         # Create 2D arrays for coloring
         temp_colors = np.tile(data.temperature, (self.n_r, 1))
-        
+
         # Create meshgrid for plotting
         THETA, R_TEMP = np.meshgrid(theta, r_temp_grid)
-        
+
         # Plot temperature band
         norm = plt.Normalize(self.temp_min, self.temp_max)
         self.temp_plot = ax.pcolormesh(
-            THETA, 
-            R_TEMP, 
+            THETA,
+            R_TEMP,
             temp_colors,
-            cmap= self.colors['temperature'],  # Red-yellow colormap for temperature
+            cmap=self.colors['temperature'],  # See config.yaml for colors
             norm=norm,  # Use the same normalization for consistent coloring
             shading='gouraud',  # Smooth color interpolation
             # alpha=0.9,  # Slight transparency
@@ -246,10 +256,12 @@ class DawnCalendarPlotter:
         month_ticks_rad = [tick / self.num_points *
                            2 * np.pi for tick in month_ticks]
 
-        ax.set_xticks(month_ticks_rad)
+        # ax.set_xticks(month_ticks_rad) # Uncomment to see month ticks
 
         # Add labels and lines
-        label_height = (self.end_time/24) + 0.0025
+        time_range = self.end_time - self.start_time
+        label_height = (self.end_time/24) + (time_range /
+                                             24 * 0.03)  # %age of the time range
         for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
             rotation = (-np.degrees(angle) + 180) % 360 - 180
             ax.text(angle, label_height, label, ha='center', va='center', rotation=rotation,
@@ -297,6 +309,12 @@ class DawnCalendarPlotter:
             self.city.year)  # Calculate dynamically
         sundays = range(first_sunday, self.num_points, 7)
         fixed_label_radius = (self.end_time/24) - 0.003
+
+        # Calculate offset based on the time range
+        time_range = self.end_time - self.start_time
+        relative_offset = time_range/24 * 0.018  # %age of the time range
+        fixed_label_radius = (self.end_time/24) - relative_offset
+
         cumulative_days = np.cumsum(days_in_month)
 
         for day_index in sundays:
@@ -311,6 +329,7 @@ class DawnCalendarPlotter:
             ax.text(angle, fixed_label_radius, str(month_day),
                     ha='center', va='center', fontsize=14, color=self.colors['sunday_label'],
                     rotation=rotation, zorder=5, fontweight='normal')
+
     def add_footer(self, fig: plt.Figure) -> None:
         """Add a footer with legend explaining different twilight phases and temperature scale."""
         # Define labels and descriptions
@@ -346,7 +365,7 @@ class DawnCalendarPlotter:
         footer_height = 0.15
         footer_width = 0.8
         footer_left = (1 - footer_width) / 2
-        footer_bottom = 0.02
+        footer_bottom = 0.15
 
         # Adjust heights and spacing
         legend_height = 0.1  # Height for the twilight legend
@@ -354,8 +373,8 @@ class DawnCalendarPlotter:
         colorbar_bottom = footer_bottom + 0.04  # Move colorbar up
 
         # Create legend axes
-        legend_ax = fig.add_axes([footer_left, colorbar_bottom + colorbar_height - 0.03, 
-                                footer_width, legend_height])
+        legend_ax = fig.add_axes([footer_left, colorbar_bottom + colorbar_height - 0.03,
+                                  footer_width, legend_height])
         legend_ax.set_aspect('equal', adjustable='box')
         legend_ax.axis('off')
 
@@ -373,43 +392,43 @@ class DawnCalendarPlotter:
 
         for x, item in zip(x_positions, legend_data):
             circle = plt.Circle((x, circle_y), circle_radius,
-                            color=item['color'],
-                            alpha=1)
+                                color=item['color'],
+                                alpha=1)
             legend_ax.add_patch(circle)
 
             legend_ax.text(x, label_y, item['label'],
-                        ha='center', va='center',
-                        color=self.colors['title_text'],
-                        fontsize=8,
-                        alpha=0.7,
-                        fontweight='bold')
+                           ha='center', va='center',
+                           color=self.colors['title_text'],
+                           fontsize=8,
+                           alpha=0.7,
+                           fontweight='bold')
 
             legend_ax.text(x, desc_y, item['description'],
-                        ha='center', va='center',
-                        color=self.colors['title_text'],
-                        fontsize=6,
-                        alpha=0.5,
-                        wrap=True)
+                           ha='center', va='center',
+                           color=self.colors['title_text'],
+                           fontsize=6,
+                           alpha=0.5,
+                           wrap=True)
 
         # Create colorbar axes and colorbar
         if hasattr(self, 'temp_plot'):
             # Match the x-coordinates with the legend
-            colorbar_ax = fig.add_axes([footer_left + 0.2, colorbar_bottom, 
-                                    footer_width - 0.4, colorbar_height])
-            colorbar = plt.colorbar(self.temp_plot, cax=colorbar_ax, 
-                                orientation='horizontal')
-            
+            colorbar_ax = fig.add_axes([footer_left + 0.2, colorbar_bottom,
+                                        footer_width - 0.4, colorbar_height])
+            colorbar = plt.colorbar(self.temp_plot, cax=colorbar_ax,
+                                    orientation='horizontal')
+
             # Remove outline and ticks
             colorbar.outline.set_visible(False)
             colorbar.ax.tick_params(size=0)
-            
+
             # Add temperature label above the colorbar
-            colorbar_ax.text(0.5, 1.5, 'Average temperature (°C)', 
-                            ha='center', va='bottom',
-                            transform=colorbar_ax.transAxes,
-                            color=self.colors['title_text'],
-                            fontsize=8)
-            
+            colorbar_ax.text(0.5, 1.5, 'Average temperature (°C)',
+                             ha='center', va='bottom',
+                             transform=colorbar_ax.transAxes,
+                             color=self.colors['title_text'],
+                             fontsize=8)
+
             # Set custom ticks to show min, middle, and max temperatures
             ticks = np.linspace(self.temp_min, self.temp_max, 5)
             colorbar.set_ticks(ticks)
@@ -418,7 +437,8 @@ class DawnCalendarPlotter:
             colorbar.ax.tick_params(labelsize=6)  # Adjust tick label size
             for label in colorbar.ax.get_xticklabels():
                 label.set_alpha(0.5)  # Add transparency
-                label.set_color(self.colors['title_text'])  # Match color with other text
+                # Match color with other text
+                label.set_color(self.colors['title_text'])
 
     def create_plot(self) -> None:
         """Create and save the complete dawn calendar plot."""
