@@ -3,7 +3,7 @@ from typing import List
 
 @dataclass
 class Config:
-    name: str
+    city_name: str
     colors: dict
     year: int = 2025
     smoothen: bool = False

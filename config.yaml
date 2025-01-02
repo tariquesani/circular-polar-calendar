@@ -1,5 +1,5 @@
 # City information
-name: "Mumbai" # City name, will default to this if no name is provided via CLI
+city_name: "Mumbai" # City name, will default to this if no name is provided via CLI
 
 # Rendering options
 smoothen: true # Optional, defaults to false, Keep false for places with Daylight Saving Time

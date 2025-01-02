@@ -7,7 +7,7 @@ class DataHandler:
     
     def __init__(self, config):
         """Initialize with config object from original implementation."""
-        self.city_name = config.name
+        self.city_name = config.city_name
         self.data_file = f"data/{self.city_name}_data.json"
 
     def load_data(self) -> Tuple[DawnData, WeatherData]:
