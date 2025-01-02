@@ -1,45 +1,13 @@
-import json
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import yaml
 import math
 from datetime import datetime, date, timedelta
-from dataclasses import dataclass
 from typing import List, Tuple
 from matplotlib.font_manager import FontProperties
-
-
-@dataclass
-class Config:
-    name: str
-    colors: dict
-    year: int = 2025
-    smoothen: bool = False
-
-    @property
-    def days_in_year(self) -> int:
-        """Calculate number of days in the year accounting for leap years."""
-        return 366 if self.year % 4 == 0 and (self.year % 100 != 0 or self.year % 400 == 0) else 365
-
-
-@dataclass
-class DawnData:
-    sunrise: List[float]
-    days_in_month: List[int]
-    civil_dawn: List[float]
-    nautical_dawn: List[float]
-    astro_dawn: List[float]
-    coordinates: dict
-    year: int
-
-
-@dataclass
-class WeatherData:
-    temperature: List[float]
-    precipitation: List[float]
-    weather_data_year: int
-
+from data_types import Config, DawnData, WeatherData
+from data_handler import DataHandler
 
 class ConfigurationError(Exception):
     """Raised when there's an error in configuration file."""
@@ -51,8 +19,9 @@ class DawnCalendarPlotter:
         self.city = city
         self.num_points = self.city.days_in_year
         self.colors = self.city.colors
+        self.data_handler = DataHandler(self.city)
         # Load dawn and twilight data, but now also other data TODO: separate this
-        self.dawn_data, self.weather_data = self.load_data()
+        self.dawn_data, self.weather_data = self.data_handler.load_data()
         self.coordinates = self.dawn_data.coordinates
         self.year = self.dawn_data.year
 
@@ -116,47 +85,6 @@ class DawnCalendarPlotter:
         return f"{abs(latitude):.6f}°{'N' if latitude >= 0 else 'S'},   " \
             f"{abs(longitude):.6f}°{'E' if longitude >= 0 else 'W'}"
 
-    def load_data(self) -> Tuple[DawnData, WeatherData]:
-        """Load and extract only dawn-related data from the JSON file."""
-        try:
-            data_file = f"data/{self.city.name}_data.json"
-            with open(data_file, 'r') as f:
-                data = json.load(f)
-
-            dawn_data = DawnData(
-                sunrise=data['sunrise'],
-                days_in_month=data['days_in_month'],
-                civil_dawn=[d[0] for d in data['civil']],
-                nautical_dawn=[d[0] for d in data['nautical']],
-                astro_dawn=[d[0] for d in data['astro']],
-                coordinates=data['coordinates'],
-                year=data['year']
-            )
-
-            weather_data = WeatherData(
-                temperature=data['temperature'],
-                precipitation=data['precipitation'],
-                weather_data_year=data['weather_data_year']
-            )
-
-            return dawn_data, weather_data
-
-        except FileNotFoundError:
-            raise ConfigurationError(f"Sun data file not found: {
-                                     self.city.data_file}")
-        except (json.JSONDecodeError, KeyError, TypeError) as e:
-            raise ConfigurationError(f"Error processing sun data: {str(e)}")
-
-    def smooth_data(self, data: List[float], num_points: int) -> np.ndarray:
-        if not self.city.smoothen:
-            return np.array(data)
-
-        """Create smooth periodic data using Fourier series."""
-        fft_coeffs = np.fft.rfft(data)
-        # Keep only lower frequencies
-        fft_coeffs[int(len(fft_coeffs) * 0.1):] = 0
-        return np.fft.irfft(fft_coeffs, num_points)
-
     def setup_plot(self) -> Tuple[plt.Figure, plt.Axes]:
         """Initialize and configure the plot."""
         fig, ax = plt.subplots(
@@ -178,10 +106,10 @@ class DawnCalendarPlotter:
 
         # Smooth only the required data
         smooth_data = {
-            'sunrise': self.smooth_data(data.sunrise, self.num_points) / 24,
-            'civil_dawn': self.smooth_data(data.civil_dawn, self.num_points) / 24,
-            'nautical_dawn': self.smooth_data(data.nautical_dawn, self.num_points) / 24,
-            'astro_dawn': self.smooth_data(data.astro_dawn, self.num_points) / 24
+            'sunrise': self.data_handler.smooth_data(data.sunrise, self.num_points, self.city.smoothen) / 24,
+            'civil_dawn': self.data_handler.smooth_data(data.civil_dawn, self.num_points, self.city.smoothen) / 24,
+            'nautical_dawn': self.data_handler.smooth_data(data.nautical_dawn, self.num_points, self.city.smoothen) / 24,
+            'astro_dawn': self.data_handler.smooth_data(data.astro_dawn, self.num_points, self.city.smoothen) / 24
         }
 
         # Calculate relative offset based on time range
