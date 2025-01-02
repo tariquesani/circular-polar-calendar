@@ -1,25 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-import yaml
 import math
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 from typing import List, Tuple
 from matplotlib.font_manager import FontProperties
 from data_types import Config, DawnData, WeatherData
 from data_handler import DataHandler
-
-class ConfigurationError(Exception):
-    """Raised when there's an error in configuration file."""
-    pass
-
+from config import ConfigurationError, load_config
 
 class DawnCalendarPlotter:
-    def __init__(self, city: Config):
-        self.city = city
-        self.num_points = self.city.days_in_year
-        self.colors = self.city.colors
-        self.data_handler = DataHandler(self.city)
+    def __init__(self, config: Config):
+        self.config = config
+        self.num_points = self.config.days_in_year
+        self.colors = self.config.colors
+        self.data_handler = DataHandler(self.config)
         # Load dawn and twilight data, but now also other data TODO: separate this
         self.dawn_data, self.weather_data = self.data_handler.load_data()
         self.coordinates = self.dawn_data.coordinates
@@ -88,8 +83,8 @@ class DawnCalendarPlotter:
     def setup_plot(self) -> Tuple[plt.Figure, plt.Axes]:
         """Initialize and configure the plot."""
         fig, ax = plt.subplots(
-            figsize=(24, 24), subplot_kw=dict(polar=True, facecolor=self.city.colors['dial']), dpi=300)
-        fig.patch.set_facecolor(self.city.colors['background'])
+            figsize=(24, 24), subplot_kw=dict(polar=True, facecolor=self.config.colors['dial']), dpi=300)
+        fig.patch.set_facecolor(self.config.colors['background'])
         ax.set_theta_direction(-1)
         ax.set_theta_offset(np.pi / 2)
         ax.set_ylim(self.start_time/24, self.end_time/24)
@@ -106,10 +101,10 @@ class DawnCalendarPlotter:
 
         # Smooth only the required data
         smooth_data = {
-            'sunrise': self.data_handler.smooth_data(data.sunrise, self.num_points, self.city.smoothen) / 24,
-            'civil_dawn': self.data_handler.smooth_data(data.civil_dawn, self.num_points, self.city.smoothen) / 24,
-            'nautical_dawn': self.data_handler.smooth_data(data.nautical_dawn, self.num_points, self.city.smoothen) / 24,
-            'astro_dawn': self.data_handler.smooth_data(data.astro_dawn, self.num_points, self.city.smoothen) / 24
+            'sunrise': self.data_handler.smooth_data(data.sunrise, self.num_points, self.config.smoothen) / 24,
+            'civil_dawn': self.data_handler.smooth_data(data.civil_dawn, self.num_points, self.config.smoothen) / 24,
+            'nautical_dawn': self.data_handler.smooth_data(data.nautical_dawn, self.num_points, self.config.smoothen) / 24,
+            'astro_dawn': self.data_handler.smooth_data(data.astro_dawn, self.num_points, self.config.smoothen) / 24
         }
 
         # Calculate relative offset based on time range
@@ -234,7 +229,7 @@ class DawnCalendarPlotter:
     def add_sunday_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
         """Add Sunday date labels."""
         first_sunday = self.find_first_sunday(
-            self.city.year)  # Calculate dynamically
+            self.config.year)  # Calculate dynamically
         sundays = range(first_sunday, self.num_points, 7)
         fixed_label_radius = (self.end_time/24) - 0.003
 
@@ -393,7 +388,7 @@ class DawnCalendarPlotter:
                 'year': FontProperties(size=48)
             }
 
-        ax.text(0.5, 1.18, self.city.name, ha='center', va='center',
+        ax.text(0.5, 1.18, self.config.city_name, ha='center', va='center',
                 fontproperties=font_props['bold'], transform=ax.transAxes)
 
         coordinate_label = self.format_coordinates(self.coordinates)
@@ -408,42 +403,21 @@ class DawnCalendarPlotter:
         # Save plot
         plt.subplots_adjust(top=0.95, bottom=0.3)
 
-        plt.savefig(f'./pdf/{self.city.name}_dawn.pdf',
+        plt.savefig(f'./pdf/{self.config.city_name}_dawn.pdf',
                     bbox_inches='tight', pad_inches=1)
-        plt.savefig(f'./png/{self.city.name}_dawn.png',
+        plt.savefig(f'./png/{self.config.city_name}_dawn.png',
                     bbox_inches='tight', pad_inches=1)
         plt.close()
 
 
-def load_config(config_path: str = "config.yaml") -> Config:
-    """Load configuration from YAML file."""
-    try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
-
-        required_fields = ['name']
-        missing_fields = [
-            field for field in required_fields if field not in config]
-        if missing_fields:
-            raise ConfigurationError(f"Missing required fields: {
-                ', '.join(missing_fields)}")
-
-        return Config(**config)
-    except FileNotFoundError:
-        raise ConfigurationError(
-            f"Configuration file not found: {config_path}")
-    except yaml.YAMLError as e:
-        raise ConfigurationError(
-            f"Error parsing YAML configuration: {str(e)}")
-
-
 def main():
+    import traceback
     try:
         city_name = sys.argv[1] if len(sys.argv) > 1 else None
         config = load_config()
 
         if city_name:
-            config.name = city_name
+            config.city_name = city_name
 
         plotter = DawnCalendarPlotter(config)
         plotter.create_plot()
@@ -451,7 +425,7 @@ def main():
         print(f"Configuration error: {str(e)}")
         exit(1)
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
+        print(f"Error: {type(e).__name__} - {str(e)}\n{''.join(traceback.format_tb(e.__traceback__))}")
         exit(1)
 
 
