@@ -148,12 +148,24 @@ class DawnCalendarPlotter:
             self.n_r
         )
 
+        # Handle mismatched data lengths (leap year case)
+        temp_data = np.array(data.temperature)
+        if len(temp_data) != self.num_points:
+            print(f"Warning: Temperature data length ({len(temp_data)}) differs from expected length ({self.num_points})")
+            if len(temp_data) > self.num_points:
+                # Truncate extra data
+                temp_data = temp_data[:self.num_points]
+            else:
+                # Pad with nearest neighbor
+                padding = self.num_points - len(temp_data)
+                temp_data = np.pad(temp_data, (0, padding), mode='edge')
+
         # Store original temperature data for colorbar
-        self.temp_min = np.min(data.temperature)
-        self.temp_max = np.max(data.temperature)
+        self.temp_min = np.min(temp_data)
+        self.temp_max = np.max(temp_data)
 
         # Create 2D arrays for coloring
-        temp_colors = np.tile(data.temperature, (self.n_r, 1))
+        temp_colors = np.tile(temp_data, (self.n_r, 1))
 
         # Create meshgrid for plotting
         THETA, R_TEMP = np.meshgrid(theta, r_temp_grid)
