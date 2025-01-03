@@ -13,6 +13,7 @@ from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 from meteostat import Point, Daily
 
+
 @dataclass
 class Location:
     """Represents a geographical location with timezone information."""
@@ -144,13 +145,14 @@ class AstralDataCalculator:
 
         return data
 
+
 class WeatherDataCalculator:
     """Handles calculations of weather data for a given location."""
-    
+
     def __init__(self, location: Location, year: int):
         self.location = location
         self.year = year
-        
+
     def _get_data_year(self) -> int:
         """Determine which year to use for weather data."""
         current_year = datetime.now().year
@@ -158,33 +160,34 @@ class WeatherDataCalculator:
             # For future or current year, use the last complete year
             return current_year - 1
         return self.year
-        
+
     def generate_yearly_weather_data(self) -> Dict[str, List[float]]:
         """Generate weather data for entire year."""
         # Create Point for the location
         location = Point(self.location.latitude, self.location.longitude)
-        
+
         # Get appropriate year for data
         data_year = self._get_data_year()
-        
+
         # Set start and end dates for the data year
         start = datetime(data_year, 1, 1)
         end = datetime(data_year, 12, 31)
-        
+
         # Fetch daily weather data
         data = Daily(location, start, end)
         data = data.normalize()
         data = data.interpolate()
         data = data.fetch()
-        
+
         # Extract temperature and precipitation data
         weather_data = {
             'temperature': data['tavg'].tolist(),  # Average temperature
             'precipitation': data['prcp'].tolist(),  # Precipitation
             'weather_data_year': data_year  # Include the actual year used for weather data
         }
-        
+
         return weather_data
+
 
 class DataInterpolator:
     """Handles interpolation of missing astronomical data."""
@@ -242,8 +245,10 @@ class DataProcessor:
             'nautical': self.interpolator.interpolate_missing_values(raw_data['nautical']),
             'astro': self.interpolator.interpolate_missing_values(raw_data['astro']),
             'moon_phases': self.interpolator.interpolate_missing_values(raw_data['moon_phases']),
-            'temperature': weather_data['temperature'],  # Already normalized and interpolated
-            'precipitation': weather_data['precipitation'],  # Already normalized and interpolated
+            # Already normalized and interpolated
+            'temperature': weather_data['temperature'],
+            # Already normalized and interpolated
+            'precipitation': weather_data['precipitation'],
             'weather_data_year': weather_data['weather_data_year'],
             'days_in_month': self.astralcalculator.days_in_month,
             'coordinates': {'latitude': self.location.latitude, 'longitude': self.location.longitude},

@@ -9,6 +9,7 @@ from data_types import Config, DawnData, WeatherData
 from data_handler import DataHandler
 from config import ConfigurationError, load_config
 
+
 class DawnCalendarPlotter:
     def __init__(self, config: Config):
         self.config = config
@@ -151,7 +152,8 @@ class DawnCalendarPlotter:
         # Handle mismatched data lengths (leap year case)
         temp_data = np.array(data.temperature)
         if len(temp_data) != self.num_points:
-            print(f"Warning: Temperature data length ({len(temp_data)}) differs from expected length ({self.num_points})")
+            print(f"Warning: Temperature data length ({
+                  len(temp_data)}) differs from expected length ({self.num_points})")
             if len(temp_data) > self.num_points:
                 # Truncate extra data
                 temp_data = temp_data[:self.num_points]
@@ -437,7 +439,8 @@ def main():
         print(f"Configuration error: {str(e)}")
         exit(1)
     except Exception as e:
-        print(f"Error: {type(e).__name__} - {str(e)}\n{''.join(traceback.format_tb(e.__traceback__))}")
+        print(f"Error: {type(e).__name__} - {str(e)
+                                             }\n{''.join(traceback.format_tb(e.__traceback__))}")
         exit(1)
 
 

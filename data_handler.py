@@ -2,9 +2,10 @@ import json
 from typing import List, Tuple
 from data_types import DawnData, WeatherData
 
+
 class DataHandler:
     """Initial data handling class with minimal changes from original implementation."""
-    
+
     def __init__(self, config):
         """Initialize with config object from original implementation."""
         self.city_name = config.city_name
@@ -38,7 +39,8 @@ class DataHandler:
             return dawn_data, weather_data
 
         except FileNotFoundError:
-            raise FileNotFoundError(f"Sun data file not found: {self.data_file}")
+            raise FileNotFoundError(
+                f"Sun data file not found: {self.data_file}")
         except (json.JSONDecodeError, KeyError, TypeError) as e:
             raise ValueError(f"Error processing sun data: {str(e)}")
 
