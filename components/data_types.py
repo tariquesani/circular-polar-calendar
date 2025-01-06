@@ -18,12 +18,9 @@ class Config:
 @dataclass
 class DawnData:
     sunrise: List[float]
-    days_in_month: List[int]
     civil_dawn: List[float]
     nautical_dawn: List[float]
     astro_dawn: List[float]
-    coordinates: dict
-    year: int
 
 
 @dataclass
@@ -31,3 +28,9 @@ class WeatherData:
     temperature: List[float]
     precipitation: List[float]
     weather_data_year: int
+
+@dataclass
+class CityData:
+    coordinates: dict
+    days_in_month: List[int]
+    year: int

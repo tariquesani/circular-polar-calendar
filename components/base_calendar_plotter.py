@@ -6,41 +6,40 @@ from typing import List, Tuple
 
 from datetime import date, timedelta
 
-from components.data_types import Config    
-from components.data_handler import DataHandler
-from components.data_types import Config, DawnData, WeatherData
+from components.data_types import Config
 from components.data_handler import DataHandler
 
+
 class BaseCalendarPlotter:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, layers=None):
         self.config = config
+        self.layers = layers if layers else []
         self.num_points = self.config.days_in_year
         self.colors = self.config.colors
         self.data_handler = DataHandler(self.config)
-        # Load dawn and twilight data, but now also other data TODO: separate this
-        self.dawn_data, self.weather_data = self.data_handler.load_data()
-        self.coordinates = self.dawn_data.coordinates
-        self.year = self.dawn_data.year
-
-        # Add temperature plotting parameters
-        self.temp_radius = 1  # Radius for temperature band
-        self.temp_band_width = 0.1  # Width of temperature band
-        self.n_r = 20  # Number of radial points for smoothness
+        self.city_data = self.data_handler.load_data()[2]
+        self.coordinates = self.city_data.coordinates
+        self.year = self.city_data.year
+        self.days_in_month = self.city_data.days_in_month
 
         # Default values
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                              'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
-        # Calculate plotting time boundaries based on astronomical data.
-        self.start_time = math.floor(min(self.dawn_data.astro_dawn)*4)/4
-        self.end_time = (math.ceil(max(self.dawn_data.sunrise)*4)/4)+0.25
 
-        print(f"Start time: {self.start_time}, End time: {self.end_time}")
+    @property
+    def start_time(self):
+        """Calculate the earliest start time across all layers."""
+        times = [
+            layer.start_time for layer in self.layers if layer.start_time is not None]
+        return min(times) if times else 0
 
-        self.hour_labels = self.generate_hour_labels(
-            self.start_time, self.end_time)
-        self.hour_ticks = self.generate_hour_ticks(
-            self.start_time, self.end_time)
+    @property
+    def end_time(self):
+        """Calculate the latest end time across all layers."""
+        times = [
+            layer.end_time for layer in self.layers if layer.end_time is not None]
+        return max(times) if times else 24
 
     @staticmethod
     def generate_hour_ticks(start, end):
@@ -96,95 +95,6 @@ class BaseCalendarPlotter:
         ax.set_yticks([])
 
         return fig, ax
-
-    def plot_layers(self, ax: plt.Axes, data: DawnData) -> None:
-        """Plot the dawn twilight layers."""
-        theta = np.linspace(0, 2*np.pi, self.num_points)
-
-        # Smooth only the required data
-        smooth_data = {
-            'sunrise': self.data_handler.smooth_data(data.sunrise, self.num_points, self.config.smoothen) / 24,
-            'civil_dawn': self.data_handler.smooth_data(data.civil_dawn, self.num_points, self.config.smoothen) / 24,
-            'nautical_dawn': self.data_handler.smooth_data(data.nautical_dawn, self.num_points, self.config.smoothen) / 24,
-            'astro_dawn': self.data_handler.smooth_data(data.astro_dawn, self.num_points, self.config.smoothen) / 24
-        }
-
-        # Calculate relative offset based on time range
-        time_range = self.end_time - self.start_time
-        daylight_offset = time_range/24 * 0.03  # 3% of time range
-
-        # Plot dawn layers
-        ax.fill_between(
-            theta, 0, smooth_data['sunrise'], color=self.colors['night'], zorder=2)
-        ax.fill_between(theta, smooth_data['sunrise'], (self.end_time/24)-daylight_offset,
-                        color=self.colors['daylight'], zorder=2)
-        ax.fill_between(theta, smooth_data['astro_dawn'], smooth_data['nautical_dawn'],
-                        color=self.colors['astro'], zorder=2, alpha=0.8)
-        ax.fill_between(theta, smooth_data['nautical_dawn'], smooth_data['civil_dawn'],
-                        color=self.colors['nautical'], zorder=2, alpha=0.7)
-        ax.fill_between(theta, smooth_data['civil_dawn'], smooth_data['sunrise'],
-                        color=self.colors['civil'], zorder=2, alpha=0.85)
-
-    def plot_temperature(self, ax: plt.Axes, data: WeatherData) -> None:
-        """Plot temperature data as a circular band."""
-        if not hasattr(data, 'temperature') or not data.temperature:
-            print("No temperature data available")
-            return  # Skip if no temperature data available
-
-        # Create coordinate system for temperature band
-        theta = np.linspace(0, 2*np.pi, self.num_points)
-
-        # Scale the temperature band to fit within the plot's y-limits
-        r_min = self.start_time/24
-        r_max = self.end_time/24
-
-        # Calculate relative offsets based on time range
-        time_range = self.end_time - self.start_time
-        temp_offset = time_range/24 * 0.042  # Adjust percentage as needed
-        band_width = time_range/24 * 0.02   # Adjust percentage as needed
-        r_mid = r_max - temp_offset  # Dynamic midpoint based on time range
-
-        r_temp_grid = np.linspace(
-            r_mid - band_width/2,  # Start band below middle
-            r_mid + band_width/2,  # End band above middle
-            self.n_r
-        )
-
-        # Handle mismatched data lengths (leap year case)
-        temp_data = np.array(data.temperature)
-        if len(temp_data) != self.num_points:
-            print(f"Warning: Temperature data length ({
-                  len(temp_data)}) differs from expected length ({self.num_points})")
-            if len(temp_data) > self.num_points:
-                # Truncate extra data
-                temp_data = temp_data[:self.num_points]
-            else:
-                # Pad with nearest neighbor
-                padding = self.num_points - len(temp_data)
-                temp_data = np.pad(temp_data, (0, padding), mode='edge')
-
-        # Store original temperature data for colorbar
-        self.temp_min = np.min(temp_data)
-        self.temp_max = np.max(temp_data)
-
-        # Create 2D arrays for coloring
-        temp_colors = np.tile(temp_data, (self.n_r, 1))
-
-        # Create meshgrid for plotting
-        THETA, R_TEMP = np.meshgrid(theta, r_temp_grid)
-
-        # Plot temperature band
-        norm = plt.Normalize(self.temp_min, self.temp_max)
-        self.temp_plot = ax.pcolormesh(
-            THETA,
-            R_TEMP,
-            temp_colors,
-            cmap=self.colors['temperature'],  # See config.yaml for colors
-            norm=norm,  # Use the same normalization for consistent coloring
-            shading='gouraud',  # Smooth color interpolation
-            # alpha=0.9,  # Slight transparency
-            zorder=9  # Place in front of other elements
-        )
 
     def add_month_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
         """Add month labels and dividing lines."""
@@ -378,15 +288,23 @@ class BaseCalendarPlotter:
                 # Match color with other text
                 label.set_color(self.colors['title_text'])
 
-    def create_plot(self) -> None:
+    def create_plot(self, layers) -> None:
         """Create and save the complete dawn calendar plot."""
-        data = self.dawn_data
+        # Get layers
+        self.layers = layers
+
+        self.hour_labels = self.generate_hour_labels(
+            self.start_time, self.end_time)
+        self.hour_ticks = self.generate_hour_ticks(
+            self.start_time, self.end_time)
+
         fig, ax = self.setup_plot()
 
-        self.plot_layers(ax, data)
-        self.plot_temperature(ax, self.weather_data)
-        self.add_month_labels(ax, data.days_in_month)
-        self.add_sunday_labels(ax, data.days_in_month)
+        for layer in layers:
+            layer.plot(ax, self)
+
+        self.add_month_labels(ax, self.days_in_month)
+        self.add_sunday_labels(ax, self.days_in_month)
         self.add_time_labels(ax)
 
         # Add title
@@ -423,4 +341,3 @@ class BaseCalendarPlotter:
         plt.savefig(f'./png/{self.config.city_name}_dawn.png',
                     bbox_inches='tight', pad_inches=1)
         plt.close()
-

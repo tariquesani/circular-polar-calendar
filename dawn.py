@@ -1,11 +1,16 @@
 import sys
+import traceback
 
 from components.config import ConfigurationError, load_config
+from components.data_handler import DataHandler
 from components.base_calendar_plotter import BaseCalendarPlotter
+
+from components.layer_dawn import DawnLayer
+from components.layer_temperature import TemperatureLayer
 
 
 def main():
-    import traceback
+
     try:
         city_name = sys.argv[1] if len(sys.argv) > 1 else None
         config = load_config()
@@ -13,8 +18,15 @@ def main():
         if city_name:
             config.city_name = city_name
 
+        data_handler = DataHandler(config)
+
+        dawn_data, weather_data, city_data = data_handler.load_data()
+        dawn_layer = DawnLayer(dawn_data, config)
+        temperature_layer = TemperatureLayer(weather_data, config)
+
         plotter = BaseCalendarPlotter(config)
-        plotter.create_plot()
+        plotter.create_plot(layers=[dawn_layer, temperature_layer])
+
     except ConfigurationError as e:
         print(f"Configuration error: {str(e)}")
         exit(1)

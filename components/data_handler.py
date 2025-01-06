@@ -1,6 +1,6 @@
 import json
 from typing import List, Tuple
-from components.data_types import DawnData, WeatherData
+from components.data_types import DawnData, WeatherData, CityData
 
 
 class DataHandler:
@@ -11,7 +11,7 @@ class DataHandler:
         self.city_name = config.city_name
         self.data_file = f"data/{self.city_name}_data.json"
 
-    def load_data(self) -> Tuple[DawnData, WeatherData]:
+    def load_data(self) -> Tuple[DawnData, WeatherData, CityData]:
         """
         Load data from JSON file, now separated into dawn and weather components.
         Keeps close to original implementation while providing better structure.
@@ -22,12 +22,9 @@ class DataHandler:
 
             dawn_data = DawnData(
                 sunrise=data['sunrise'],
-                days_in_month=data['days_in_month'],
                 civil_dawn=[d[0] for d in data['civil']],
                 nautical_dawn=[d[0] for d in data['nautical']],
                 astro_dawn=[d[0] for d in data['astro']],
-                coordinates=data['coordinates'],
-                year=data['year']
             )
 
             weather_data = WeatherData(
@@ -36,7 +33,13 @@ class DataHandler:
                 weather_data_year=data['weather_data_year']
             )
 
-            return dawn_data, weather_data
+            city_data = CityData(
+                coordinates=data['coordinates'],
+                days_in_month=data['days_in_month'],
+                year=data['year']
+            )
+
+            return dawn_data, weather_data, city_data
 
         except FileNotFoundError:
             raise FileNotFoundError(
