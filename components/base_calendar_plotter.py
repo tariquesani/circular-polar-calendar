@@ -16,8 +16,7 @@ class BaseCalendarPlotter:
         self.layers = layers if layers else []
         self.num_points = self.config.days_in_year
         self.colors = self.config.colors
-        self.data_handler = DataHandler(self.config)
-        self.city_data = self.data_handler.load_data()[2]
+        self.city_data = self.config.city_data
         self.coordinates = self.city_data.coordinates
         self.year = self.city_data.year
         self.days_in_month = self.city_data.days_in_month

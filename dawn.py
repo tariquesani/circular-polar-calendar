@@ -21,6 +21,8 @@ def main():
         data_handler = DataHandler(config)
 
         dawn_data, weather_data, city_data = data_handler.load_data()
+        config.city_data = city_data
+        
         dawn_layer = DawnLayer(dawn_data, config)
         temperature_layer = TemperatureLayer(weather_data, config)
 
