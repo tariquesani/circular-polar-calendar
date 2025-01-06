@@ -42,8 +42,8 @@ class BaseCalendarPlotter:
         return max(times) if times else 24
 
     @staticmethod
-    def generate_hour_ticks(start, end):
-        return [h / 24 for h in BaseCalendarPlotter.frange(start, end, 0.25)]
+    def generate_hour_ticks(start, end, interval=0.25):
+        return [h / 24 for h in BaseCalendarPlotter.frange(start, end, interval)]
 
     @staticmethod
     def frange(start, stop, step):
@@ -53,15 +53,15 @@ class BaseCalendarPlotter:
             start += step
 
     @staticmethod
-    def generate_hour_labels(start, end):
+    def generate_hour_labels(start, end, interval=0.25):
         labels = [' ']  # Start with a blank space
-        time = start + 0.25  # Start from the first quarter past the start time
-        while time < end - 0.25:  # Stop before the end time
+        time = start + interval  # Start from the first quarter past the start time
+        while time < end - interval:  # Stop before the end time
             hours = int(time)
             minutes = int((time % 1) * 60)
             am_pm = "AM" if hours < 12 else "PM"
             labels.append(f"{(hours - 1) % 12 + 1}:{minutes:02}{am_pm}")
-            time += 0.25  # Increment by 15 minutes
+            time += interval  # Increment by the specified interval in minutes
         return labels
 
     @staticmethod
@@ -294,9 +294,9 @@ class BaseCalendarPlotter:
         self.layers = layers
 
         self.hour_labels = self.generate_hour_labels(
-            self.start_time, self.end_time)
+            self.start_time, self.end_time, self.config.interval)
         self.hour_ticks = self.generate_hour_ticks(
-            self.start_time, self.end_time)
+            self.start_time, self.end_time, self.config.interval)
 
         fig, ax = self.setup_plot()
 
