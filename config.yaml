@@ -1,8 +1,11 @@
 # City information
-city_name: "Mumbai" # City name, will default to this if no name is provided via CLI
+city_name: "Nagpur" # City name, will default to this if no name is provided via CLI
 
 # Rendering options
 smoothen: true # Optional, defaults to false, Keep false for places with Daylight Saving Time
+
+# Interval for hour labels and tick marks
+interval: .25 # Optional, defaults to 15, in minutes, passed as fraction of hour, e.g. 0.25 = 15 minutes
 
 # Colors for different twilight phases and page background
 # Ensure that all colors are valid hex values

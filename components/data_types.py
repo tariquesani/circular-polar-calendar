@@ -8,6 +8,7 @@ class Config:
     colors: dict
     year: int = 2025
     smoothen: bool = False
+    interval: float = 0.25
 
     @property
     def days_in_year(self) -> int:
