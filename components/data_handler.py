@@ -1,6 +1,6 @@
 import json
 from typing import List, Tuple
-from components.data_types import DawnData, WeatherData, CityData
+from components.data_types import DawnData, WeatherData, CityData, SunData
 
 
 class DataHandler:
@@ -39,7 +39,18 @@ class DataHandler:
                 year=data['year']
             )
 
-            return dawn_data, weather_data, city_data
+            sun_data = SunData(
+                sunrise=data['sunrise'],
+                sunset=data['sunset'],
+                civil_dawn=[d[0] for d in data['civil']],
+                nautical_dawn=[d[0] for d in data['nautical']],
+                astro_dawn=[d[0] for d in data['astro']],
+                civil_dusk=[d[1] for d in data['civil']],
+                nautical_dusk=[d[1] for d in data['nautical']],
+                astro_dusk=[d[1] for d in data['astro']]
+            )
+
+            return dawn_data, weather_data, city_data, sun_data
 
         except FileNotFoundError:
             raise FileNotFoundError(

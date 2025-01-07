@@ -15,6 +15,16 @@ class Config:
         """Calculate number of days in the year accounting for leap years."""
         return 366 if self.year % 4 == 0 and (self.year % 100 != 0 or self.year % 400 == 0) else 365
 
+@dataclass
+class SunData:
+    sunrise: List[float]
+    sunset: List[float]
+    civil_dawn: List[float]
+    nautical_dawn: List[float]
+    astro_dawn: List[float]
+    civil_dusk: List[float]
+    nautical_dusk: List[float]
+    astro_dusk: List[float]
 
 @dataclass
 class DawnData:
