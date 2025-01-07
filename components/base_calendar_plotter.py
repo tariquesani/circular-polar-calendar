@@ -12,6 +12,7 @@ from components.data_handler import DataHandler
 class BaseCalendarPlotter:
     def __init__(self, config: Config, layers=None):
         self.config = config
+        self.config.file_name = getattr(self.config, 'file_name', self.config.city_name)
         self.layers = layers if layers else []
         self.num_points = self.config.days_in_year
         self.colors = self.config.colors
@@ -241,8 +242,8 @@ class BaseCalendarPlotter:
         # Save plot
         plt.subplots_adjust(top=0.95, bottom=0.3)
 
-        plt.savefig(f'./pdf/{self.config.city_name}_dawn.pdf',
+        plt.savefig(f'./pdf/{self.config.file_name}.pdf',
                     bbox_inches='tight', pad_inches=1)
-        plt.savefig(f'./png/{self.config.city_name}_dawn.png',
+        plt.savefig(f'./png/{self.config.file_name}.png',
                     bbox_inches='tight', pad_inches=1)
         plt.close()
