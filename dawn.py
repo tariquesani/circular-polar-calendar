@@ -1,3 +1,14 @@
+"""
+Dawn Calendar Plotter
+
+This script generates a calendar visualization that combines dawn twilight times, temperature,
+and optionally precipitation data. It creates a circular calendar plot with multiple
+data layers that can be customized through configuration.
+
+The script can accept a city name as a command line argument, otherwise it uses
+the default city from the configuration file.
+"""
+
 import sys
 import traceback
 
@@ -11,36 +22,56 @@ from components.layer_precipitation import PrecipitationLayer
 
 
 def main():
+    """
+    Main function that orchestrates the calendar plot generation process.
 
+    The function:
+    1. Loads configuration (either default or with specified city)
+    2. Initializes data handler to load required datasets
+    3. Creates visualization layers (dawn times, temperature, and optionally precipitation)
+    4. Combines layers into final calendar plot
+
+    Exits with status code 1 if any errors occur during execution.
+    """
     try:
+        # Get city name from command line args if provided
         city_name = sys.argv[1] if len(sys.argv) > 1 else None
         config = load_config()
 
         if city_name:
             config.city_name = city_name
 
+        # Initialize data handler and load required datasets
         data_handler = DataHandler(config)
+        config.dawn_data, config.weather_data, config.city_data, config.sun_data = data_handler.load_data()
 
-        dawn_data, weather_data, city_data = data_handler.load_data()
-        config.city_data = city_data
+        #File name for your plots
+        config.file_name = f"{city_name}_Dawn"
 
+        # Configuration options for adjusting visualization layout
+        # Commented out values show example settings
         # config.temp_offset = 0.062 # 6.2% offset for temperature ring, higher means more inside the circle
         # config.temp_footer_offset = 0.01 # 1% offset for temperature footer
 
         # config.precip_offset = 0.042 # 4.2% offset for precipitation ring
         # config.precip_footer_offset = 0.04 # 4% offset for precipitation footer
 
-        dawn_layer = DawnLayer(dawn_data, config)
-        temperature_layer = TemperatureLayer(weather_data, config)
-        precipitation_layer = PrecipitationLayer(weather_data, config)
+        # Create individual data layers
+        dawn_layer = DawnLayer(config)
+        temperature_layer = TemperatureLayer(config)
+        # Precipitation layer is optional and currently commented out
+        # precipitation_layer = PrecipitationLayer(config)
 
+        # Initialize base plotter and combine layers
         plotter = BaseCalendarPlotter(config)
         plotter.create_plot(layers=[dawn_layer, temperature_layer])
 
     except ConfigurationError as e:
+        # Handle configuration-specific errors
         print(f"Configuration error: {str(e)}")
         exit(1)
     except Exception as e:
+        # Handle any other unexpected errors with full traceback
         print(f"Error: {type(e).__name__} - {str(e)
                                              }\n\n{''.join(traceback.format_tb(e.__traceback__))}")
         exit(1)
