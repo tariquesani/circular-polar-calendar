@@ -7,9 +7,9 @@ import math
 
 
 class DawnLayer(Layer):
-    def __init__(self, dawn_data, config):
-        self.dawn_data = dawn_data
+    def __init__(self, config):
         self.config = config
+        self.dawn_data = config.dawn_data
         self.data_handler = DataHandler(self.config)
 
     @property

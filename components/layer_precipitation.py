@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 
 class PrecipitationLayer(Layer):
-    def __init__(self, weather_data, config):
-        self.weather_data = weather_data
+    def __init__(self, config):
         self.config = config
+        self.weather_data = config.weather_data
 
         # Set a default value for precip_offset and precip_footer_offset
         self.config.precip_offset = getattr(self.config, 'precip_offset', 0.042)
