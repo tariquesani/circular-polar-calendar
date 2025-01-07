@@ -8,6 +8,11 @@ class PrecipitationLayer(Layer):
     def __init__(self, weather_data, config):
         self.weather_data = weather_data
         self.config = config
+
+        # Set a default value for precip_offset and precip_footer_offset
+        self.config.precip_offset = getattr(self.config, 'precip_offset', 0.042)
+        self.config.precip_footer_offset = getattr(self.config, 'precip_footer_offset', 0.04)
+        
         # Add precipitation plotting parameters
         self.n_r = 20  # Number of radial points for smoothness
 

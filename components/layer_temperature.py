@@ -8,8 +8,14 @@ class TemperatureLayer(Layer):
     def __init__(self, weather_data, config):
         self.weather_data = weather_data
         self.config = config
+
+        # Set a default value for temp_offset and temp_footer_offset
+        self.config.temp_offset = getattr(self.config, 'temp_offset', 0.042)
+        self.config.temp_footer_offset = getattr(self.config, 'temp_footer_offset', 0.04)
+
         # Add temperature plotting parameters
         self.n_r = 20  # Number of radial points for smoothness
+        
 
     @property
     def start_time(self):
