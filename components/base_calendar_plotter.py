@@ -1,4 +1,3 @@
-import math
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import numpy as np
@@ -24,7 +23,6 @@ class BaseCalendarPlotter:
         # Default values
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                              'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
-
 
     @property
     def start_time(self):
@@ -178,134 +176,20 @@ class BaseCalendarPlotter:
                     rotation=rotation, zorder=5, fontweight='normal')
 
     def add_footer(self, fig: plt.Figure) -> None:
-        """Add a footer with legend explaining different twilight phases and temperature scale."""
-        # Define labels and descriptions
-        legend_data = [
-            {
-                "label": "Daylight",
-                "description": "Sun above horizon",
-                "color": self.colors['daylight']
-            },
-            {
-                "label": "Civil Twilight",
-                "description": "Sun ≤6° below horizon",
-                "color": self.colors['civil']
-            },
-            {
-                "label": "Nautical Twilight",
-                "description": "Sun 6° to 12° below horizon",
-                "color": self.colors['nautical']
-            },
-            {
-                "label": "Astronomical Twilight",
-                "description": "Sun 12° to 18° below horizon",
-                "color": self.colors['astro']
-            },
-            {
-                "label": "Night",
-                "description": "Sun > 18° below horizon",
-                "color": self.colors['night']
-            }
-        ]
+        """Add footers from the layers."""
+        footer_dimensions = {
+            "height": 0.15,
+            "width": 0.8,
+            "left": (1 - 0.8) / 2,  # Derived from width
+            "bottom": 0.15
+        }
 
-        # Create footer axes
-        footer_height = 0.15
-        footer_width = 0.8
-        footer_left = (1 - footer_width) / 2
-        footer_bottom = 0.15
+        # Ask each layer to render its footer
+        for layer in self.layers:
+            layer.footer(fig, footer_dimensions, self)
 
-        # Adjust heights and spacing
-        legend_height = 0.1  # Height for the twilight legend
-        colorbar_height = 0.005  # Reduced height for the colorbar
-        colorbar_bottom = footer_bottom + 0.04  # Move colorbar up
-
-        # Create legend axes
-        legend_ax = fig.add_axes([footer_left, colorbar_bottom + colorbar_height - 0.03,
-                                  footer_width, legend_height])
-        legend_ax.set_aspect('equal', adjustable='box')
-        legend_ax.axis('off')
-
-        # Set fixed boundaries for legend
-        legend_ax.set_xlim(0, 1)
-        legend_ax.set_ylim(0, 0.2)
-
-        # Draw legend elements
-        num_items = len(legend_data)
-        x_positions = np.linspace(0.1, 0.9, num_items)
-        circle_radius = 0.015
-        circle_y = 0.15
-        label_y = 0.125
-        desc_y = 0.117
-
-        for x, item in zip(x_positions, legend_data):
-            circle = plt.Circle((x, circle_y), circle_radius,
-                                color=item['color'],
-                                alpha=1)
-            legend_ax.add_patch(circle)
-
-            legend_ax.text(x, label_y, item['label'],
-                           ha='center', va='center',
-                           color=self.colors['title_text'],
-                           fontsize=8,
-                           alpha=0.7,
-                           fontweight='bold')
-
-            legend_ax.text(x, desc_y, item['description'],
-                           ha='center', va='center',
-                           color=self.colors['title_text'],
-                           fontsize=6,
-                           alpha=0.5,
-                           wrap=True)
-
-        # Create colorbar axes and colorbar
-        if hasattr(self, 'temp_plot'):
-            # Match the x-coordinates with the legend
-            colorbar_ax = fig.add_axes([footer_left + 0.2, colorbar_bottom,
-                                        footer_width - 0.4, colorbar_height])
-            colorbar = plt.colorbar(self.temp_plot, cax=colorbar_ax,
-                                    orientation='horizontal')
-
-            # Remove outline and ticks
-            colorbar.outline.set_visible(False)
-            colorbar.ax.tick_params(size=0)
-
-            # Add temperature label above the colorbar
-            colorbar_ax.text(0.5, 1.5, 'Average temperature (°C)',
-                             ha='center', va='bottom',
-                             transform=colorbar_ax.transAxes,
-                             color=self.colors['title_text'],
-                             fontsize=8)
-
-            # Set custom ticks to show min, middle, and max temperatures
-            ticks = np.linspace(self.temp_min, self.temp_max, 5)
-            colorbar.set_ticks(ticks)
-            colorbar.set_ticklabels([f'{t:.1f}°C' for t in ticks])
-
-            colorbar.ax.tick_params(labelsize=6)  # Adjust tick label size
-            for label in colorbar.ax.get_xticklabels():
-                label.set_alpha(0.5)  # Add transparency
-                # Match color with other text
-                label.set_color(self.colors['title_text'])
-
-    def create_plot(self, layers) -> None:
-        """Create and save the complete dawn calendar plot."""
-        # Get layers
-        self.layers = layers
-
-        self.hour_labels = self.generate_hour_labels(
-            self.start_time, self.end_time, self.config.interval)
-        self.hour_ticks = self.generate_hour_ticks(
-            self.start_time, self.end_time, self.config.interval)
-
-        fig, ax = self.setup_plot()
-
-        for layer in layers:
-            layer.plot(ax, self)
-
-        self.add_month_labels(ax, self.days_in_month)
-        self.add_sunday_labels(ax, self.days_in_month)
-        self.add_time_labels(ax)
-
+    def add_title(self, ax: plt.Axes) -> None:
+        """Add title to the plot."""
         # Add title
         try:
             font_props = {
@@ -328,6 +212,28 @@ class BaseCalendarPlotter:
                 fontproperties=font_props['regular'], transform=ax.transAxes)
         ax.text(0.5, 1.23, str(self.year), ha='center', va='center',
                 fontproperties=font_props['year'], transform=ax.transAxes)
+
+    def create_plot(self, layers) -> None:
+        """Create and save the complete dawn calendar plot."""
+        # Get layers
+        self.layers = layers
+
+        self.hour_labels = self.generate_hour_labels(
+            self.start_time, self.end_time, self.config.interval)
+        self.hour_ticks = self.generate_hour_ticks(
+            self.start_time, self.end_time, self.config.interval)
+
+        fig, ax = self.setup_plot()
+
+        for layer in layers:
+            layer.plot(ax, self)
+
+        self.add_month_labels(ax, self.days_in_month)
+        self.add_sunday_labels(ax, self.days_in_month)
+        self.add_time_labels(ax)
+
+        # Add title
+        self.add_title(ax)
 
         # Add footer
         self.add_footer(fig)

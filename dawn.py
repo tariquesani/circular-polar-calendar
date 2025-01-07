@@ -22,7 +22,7 @@ def main():
 
         dawn_data, weather_data, city_data = data_handler.load_data()
         config.city_data = city_data
-        
+
         dawn_layer = DawnLayer(dawn_data, config)
         temperature_layer = TemperatureLayer(weather_data, config)
 
@@ -34,7 +34,7 @@ def main():
         exit(1)
     except Exception as e:
         print(f"Error: {type(e).__name__} - {str(e)
-                                             }\n{''.join(traceback.format_tb(e.__traceback__))}")
+                                             }\n\n{''.join(traceback.format_tb(e.__traceback__))}")
         exit(1)
 
 

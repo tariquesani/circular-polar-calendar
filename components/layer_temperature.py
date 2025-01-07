@@ -3,13 +3,13 @@ from components.layer import Layer
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class TemperatureLayer(Layer):
     def __init__(self, weather_data, config):
         self.weather_data = weather_data
         self.config = config
         # Add temperature plotting parameters
         self.n_r = 20  # Number of radial points for smoothness
-
 
     @property
     def start_time(self):
@@ -71,7 +71,7 @@ class TemperatureLayer(Layer):
 
         # Plot temperature band
         norm = plt.Normalize(base.temp_min, base.temp_max)
-        base.temp_plot = ax.pcolormesh(
+        self.temp_plot = ax.pcolormesh(
             THETA,
             R_TEMP,
             temp_colors,
@@ -81,3 +81,35 @@ class TemperatureLayer(Layer):
             # alpha=0.9,  # Slight transparency
             zorder=9  # Place in front of other elements
         )
+
+    def footer(self, fig, footer_dimensions, base: BaseCalendarPlotter):
+        """Add a footer with legend explaining different temperature scales."""
+        colorbar_height = 0.005  # Reduced height for the colorbar
+        # Move colorbar up
+        colorbar_bottom = footer_dimensions['bottom'] + 0.04
+        colorbar_ax = fig.add_axes([footer_dimensions['left'] + 0.2, colorbar_bottom,
+                                    footer_dimensions['width'] - 0.4, colorbar_height])
+        colorbar = plt.colorbar(self.temp_plot, cax=colorbar_ax,
+                                orientation='horizontal')
+
+        # Remove outline and ticks
+        colorbar.outline.set_visible(False)
+        colorbar.ax.tick_params(size=0)
+
+        # Add temperature label above the colorbar
+        colorbar_ax.text(0.5, 1.5, 'Average temperature (°C)',
+                         ha='center', va='bottom',
+                         transform=colorbar_ax.transAxes,
+                         color=self.config.colors['title_text'],
+                         fontsize=8)
+
+        # Set custom ticks to show min, middle, and max temperatures
+        ticks = np.linspace(base.temp_min, base.temp_max, 5)
+        colorbar.set_ticks(ticks)
+        colorbar.set_ticklabels([f'{t:.1f}°C' for t in ticks])
+
+        colorbar.ax.tick_params(labelsize=6)  # Adjust tick label size
+        for label in colorbar.ax.get_xticklabels():
+            label.set_alpha(0.5)  # Add transparency
+            # Match color with other text
+            label.set_color(self.config.colors['title_text'])
