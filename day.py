@@ -1,5 +1,5 @@
 """
-Dawn Calendar Plotter
+Day Calendar Plotter
 
 This script generates a calendar visualization that combines dawn twilight times, temperature,
 and precipitation data. It creates a circular calendar plot with multiple
@@ -19,6 +19,7 @@ from components.base_calendar_plotter import BaseCalendarPlotter
 from components.layer_dawn import DawnLayer
 from components.layer_temperature import TemperatureLayer
 from components.layer_precipitation import PrecipitationLayer
+from components.layer_day import DayLayer
 
 
 def main():
@@ -46,7 +47,7 @@ def main():
         config.dawn_data, config.weather_data, config.city_data, config.sun_data = data_handler.load_data()
 
         #File name for your plots
-        config.file_name = f"{city_name}_Dawn"
+        config.file_name = f"{city_name}_Day"
 
         # Configuration options for adjusting visualization layout
         # Commented out values show example settings
@@ -57,14 +58,15 @@ def main():
         # config.precip_footer_offset = 0.04 # 4% offset for precipitation footer
 
         # Create individual data layers
-        dawn_layer = DawnLayer(config)
+        # dawn_layer = DawnLayer(config)
+        day_layer = DayLayer(config)
         temperature_layer = TemperatureLayer(config)
         # Precipitation layer is currently commented out
         # precipitation_layer = PrecipitationLayer(config)
 
         # Initialize base plotter and combine layers
         plotter = BaseCalendarPlotter(config)
-        plotter.create_plot(layers=[dawn_layer, temperature_layer])
+        plotter.create_plot(layers=[day_layer, temperature_layer])
 
     except ConfigurationError as e:
         # Handle configuration-specific errors
