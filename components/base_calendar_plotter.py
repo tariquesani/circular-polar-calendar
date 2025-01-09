@@ -61,15 +61,7 @@ class BaseCalendarPlotter:
             labels.append(f"{(hours - 1) % 12 + 1}:{minutes:02}{am_pm}")
             time += interval  # Increment by the specified interval in minutes
         return labels
-
-    @staticmethod
-    def find_first_sunday(year: int) -> int:
-        """Calculate the day number (0-based) of the first Sunday in the year."""
-        first_day = date(year, 1, 1)
-        first_sunday = first_day + \
-            timedelta(days=(6 - first_day.weekday()) % 7)
-        return (first_sunday - first_day).days
-
+    
     @staticmethod
     def format_coordinates(coords):
         """ Converts a dictionary with latitude and longitude into a formatted string with degree sign and N/S, E/W postfixes. """
@@ -149,32 +141,6 @@ class BaseCalendarPlotter:
             ax.fill_between(theta, radius - 0.0001, radius + 0.0001,
                             color='gray', alpha=0.4, zorder=3, linewidth=0)
 
-    def add_sunday_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
-        """Add Sunday date labels."""
-        first_sunday = self.find_first_sunday(
-            self.config.year)  # Calculate dynamically
-        sundays = range(first_sunday, self.num_points, 7)
-        fixed_label_radius = (self.end_time/24) - 0.003
-
-        # Calculate offset based on the time range
-        time_range = self.end_time - self.start_time
-        relative_offset = time_range/24 * 0.018  # %age of the time range
-        fixed_label_radius = (self.end_time/24) - relative_offset
-
-        cumulative_days = np.cumsum(days_in_month)
-
-        for day_index in sundays:
-            angle = day_index / self.num_points * 2 * np.pi
-            month_index = next((i for i, total in enumerate(cumulative_days)
-                                if day_index < total), 11)
-            days_before_month = cumulative_days[month_index -
-                                                1] if month_index > 0 else 0
-            month_day = day_index - days_before_month + 1
-
-            rotation = (-np.degrees(angle) + 180) % 360 - 180
-            ax.text(angle, fixed_label_radius, str(month_day),
-                    ha='center', va='center', fontsize=14, color=self.colors['sunday_label'],
-                    rotation=rotation, zorder=5, fontweight='normal')
 
     def add_footer(self, fig: plt.Figure) -> None:
         """Add footers from the layers."""
@@ -187,7 +153,9 @@ class BaseCalendarPlotter:
 
         # Ask each layer to render its footer
         for layer in self.layers:
-            layer.footer(fig, footer_dimensions, self)
+            if hasattr(layer, "footer"):
+                layer.footer(fig, footer_dimensions, self)
+                        
 
     def add_title(self, ax: plt.Axes) -> None:
         """Add title to the plot."""
@@ -230,7 +198,7 @@ class BaseCalendarPlotter:
             layer.plot(ax, self)
 
         self.add_month_labels(ax, self.days_in_month)
-        self.add_sunday_labels(ax, self.days_in_month)
+        # self.add_sunday_labels(ax, self.days_in_month)
         self.add_time_labels(ax)
 
         # Add title
