@@ -16,7 +16,6 @@ from components.config import ConfigurationError, load_config
 from components.data_handler import DataHandler
 from components.base_calendar_plotter import BaseCalendarPlotter
 
-from components.layer_dawn import DawnLayer
 from components.layer_temperature import TemperatureLayer
 from components.layer_precipitation import PrecipitationLayer
 from components.layer_day import DayLayer
@@ -51,22 +50,22 @@ def main():
 
         # Configuration options for adjusting visualization layout
         # Commented out values show example settings
-        # config.temp_offset = 0.062 # 6.2% offset for temperature ring, higher means more inside the circle
-        # config.temp_footer_offset = 0.01 # 1% offset for temperature footer
+        config.temp_offset = 0.062 # 6.2% offset for temperature ring, higher means more inside the circle
+        config.temp_footer_offset = 0.01 # 1% offset for temperature footer
 
-        # config.precip_offset = 0.042 # 4.2% offset for precipitation ring
-        # config.precip_footer_offset = 0.04 # 4% offset for precipitation footer
+        config.precip_offset = 0.042 # 4.2% offset for precipitation ring
+        config.precip_footer_offset = 0.04 # 4% offset for precipitation footer
 
         # Create individual data layers
         # dawn_layer = DawnLayer(config)
         day_layer = DayLayer(config)
         temperature_layer = TemperatureLayer(config)
         # Precipitation layer is currently commented out
-        # precipitation_layer = PrecipitationLayer(config)
+        precipitation_layer = PrecipitationLayer(config)
 
         # Initialize base plotter and combine layers
         plotter = BaseCalendarPlotter(config)
-        plotter.create_plot(layers=[day_layer, temperature_layer])
+        plotter.create_plot(layers=[day_layer, temperature_layer, precipitation_layer])
 
     except ConfigurationError as e:
         # Handle configuration-specific errors
