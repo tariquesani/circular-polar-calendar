@@ -159,28 +159,22 @@ class BaseCalendarPlotter:
 
     def add_title(self, ax: plt.Axes) -> None:
         """Add title to the plot."""
-        # Add title
         try:
-            font_props = {
-                'bold': FontProperties(fname='./fonts/Arvo-Bold.ttf', size=64),
-                'regular': FontProperties(fname='./fonts/Arvo-Regular.ttf', size=20),
-                'year': FontProperties(fname='./fonts/Arvo-Regular.ttf', size=48)
-            }
+            font_props = {k: FontProperties(fname=f'./fonts/Arvo-{v}.ttf', size=s)
+                        for k, v, s in [('bold', 'Bold', 64),
+                                    ('regular', 'Regular', 20),
+                                    ('year', 'Regular', 48)]}
         except:
-            font_props = {
-                'bold': FontProperties(weight='bold', size=64),
-                'regular': FontProperties(size=20),
-                'year': FontProperties(size=48)
-            }
+            font_props = {k: FontProperties(weight=w, size=s)
+                        for k, (w, s) in {'bold': ('bold', 64),
+                                        'regular': (None, 20),
+                                        'year': (None, 48)}.items()}
 
-        ax.text(0.5, 1.18, self.config.city_name, ha='center', va='center',
-                fontproperties=font_props['bold'], transform=ax.transAxes)
-
-        coordinate_label = self.format_coordinates(self.coordinates)
-        ax.text(0.5, 1.13, coordinate_label, ha='center', va='center',
-                fontproperties=font_props['regular'], transform=ax.transAxes)
-        ax.text(0.5, 1.23, str(self.year), ha='center', va='center',
-                fontproperties=font_props['year'], transform=ax.transAxes)
+        common_props = {'ha': 'center', 'va': 'center', 'transform': ax.transAxes}
+        ax.text(0.5, 1.23, str(self.year), fontproperties=font_props['year'], **common_props)
+        ax.text(0.5, 1.18, self.config.city_name, fontproperties=font_props['bold'], **common_props)
+        ax.text(0.5, 1.13, self.format_coordinates(self.coordinates), 
+                fontproperties=font_props['regular'], **common_props)
 
     def create_plot(self, layers) -> None:
         """Create and save the complete dawn calendar plot."""
