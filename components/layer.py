@@ -17,7 +17,7 @@ class Layer:
         :param calendar: The CalendarPlot instance providing context.
         """
         raise NotImplementedError("Each layer must implement the plot method.")
-    def footer(self, ax):
+    def footer(self, fig, footer_dimensions, base):
         """
         Render the footer for this layer onto the provided Axes object.
         Each layer is responsible for its unique footer layout.
