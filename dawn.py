@@ -1,11 +1,13 @@
 """Dawn Calendar Plotter - Generates a circular calendar visualization combining dawn twilight times and weather data."""
 
 import sys
+import traceback
 from components.config import ConfigurationError, load_config
 from components.data_handler import DataHandler
 from components.base_calendar_plotter import BaseCalendarPlotter
 from components.layer_dawn import DawnLayer
 from components.layer_temperature import TemperatureLayer
+from components.layer_sunday import SundayLayer
 
 def main():
     try:
@@ -23,14 +25,17 @@ def main():
         plotter = BaseCalendarPlotter(config)
         plotter.create_plot(layers=[
             DawnLayer(config),
-            TemperatureLayer(config)
+            TemperatureLayer(config),
+            SundayLayer(config)
         ])
 
     except ConfigurationError as e:
         print(f"Configuration error: {str(e)}")
         exit(1)
     except Exception as e:
-        print(f"Error: {type(e).__name__} - {str(e)}")
+        print(f"Error: {type(e).__name__} - {str(e)
+                                }\n\n{''.join(traceback.format_tb(e.__traceback__))}")
+
         exit(1)
 
 if __name__ == "__main__":
