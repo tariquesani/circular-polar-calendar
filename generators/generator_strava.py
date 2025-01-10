@@ -9,7 +9,7 @@ load_dotenv()
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 TOKENS_FILE = "strava_tokens.json"
-OUTPUT_FILE = "strava_activities.json"
+OUTPUT_FILE = "../data/strava_activities.json"
 
 def load_tokens():
     """Load tokens from a file."""

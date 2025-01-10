@@ -273,7 +273,7 @@ def main():
         processor = DataProcessor(city_name, year)
         data = processor.process_data()
 
-        filename = f"data/{city_name}_data.json"
+        filename = f"../data/{city_name}_data.json"
         output_path = Path(filename)
 
         with output_path.open('w') as f:
