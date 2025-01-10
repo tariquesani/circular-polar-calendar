@@ -20,13 +20,13 @@ def main():
         data_handler = DataHandler(config)
         (config.dawn_data, config.weather_data, 
          config.city_data, config.sun_data) = data_handler.load_data()
+        
 
         # Create and combine layers
         plotter = BaseCalendarPlotter(config)
         plotter.create_plot(layers=[
             DawnLayer(config),
-            TemperatureLayer(config),
-            SundayLayer(config)
+            TemperatureLayer(config)
         ])
 
     except ConfigurationError as e:

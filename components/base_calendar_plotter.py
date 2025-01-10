@@ -23,7 +23,7 @@ class BaseCalendarPlotter:
 
         # Default values
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-                             'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+                             'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'] 
 
     @property
     def start_time(self):
@@ -187,6 +187,10 @@ class BaseCalendarPlotter:
         # Get layers
         self.layers = layers
 
+        if getattr(self.config, "use_sunday_layer", True):
+            from components.layer_sunday import SundayLayer
+            self.layers.append(SundayLayer(self.config))
+
         self.hour_labels = self.generate_hour_labels(
             self.start_time, self.end_time, self.config.interval)
         self.hour_ticks = self.generate_hour_ticks(
@@ -198,7 +202,6 @@ class BaseCalendarPlotter:
             layer.plot(ax, self)
 
         self.add_month_labels(ax, self.days_in_month)
-        # self.add_sunday_labels(ax, self.days_in_month)
         self.add_time_labels(ax)
 
         # Add title

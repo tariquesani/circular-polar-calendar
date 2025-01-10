@@ -56,6 +56,8 @@ def main():
         config.precip_offset = 0.042 # 4.2% offset for precipitation ring
         config.precip_footer_offset = 0.04 # 4% offset for precipitation footer
 
+        # config.use_sunday_layer = False #Uncomment if you don't want Sunday layer
+
         # Create individual data layers
         # dawn_layer = DawnLayer(config)
         day_layer = DayLayer(config)
