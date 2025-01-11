@@ -1,80 +1,106 @@
-import requests, json, os
+import json, os, signal, webbrowser
 from time import time
 from datetime import datetime
+from threading import Thread
 from stravalib.client import Client
+from bottle import Bottle, request, run
 from dotenv import load_dotenv
 
+# Load environment config
 load_dotenv()
-
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 TOKENS_FILE = "strava_tokens.json"
 OUTPUT_FILE = "../data/strava_activities.json"
 
+# Initialize Bottle app and global auth state
+app = Bottle()
+auth_code = None
+bottle_thread = None
+
 def load_tokens():
-    """Load tokens from a file."""
+    """Load tokens from file."""
     return json.load(open(TOKENS_FILE)) if os.path.exists(TOKENS_FILE) else {}
 
 def save_tokens(tokens):
-    """Save tokens to a file."""
+    """Save tokens to file."""
     json.dump(tokens, open(TOKENS_FILE, 'w'))
 
-def get_initial_tokens(client_id, client_secret, auth_code):
-    """Exchange the authorization code for initial tokens."""
-    response = requests.post("https://www.strava.com/oauth/token", data={
-        'client_id': client_id, 'client_secret': client_secret,
-        'code': auth_code, 'grant_type': 'authorization_code'
-    })
-    response.raise_for_status()
-    return response.json()
+def stop_bottle_server():
+    """Force stop the Bottle server."""
+    if bottle_thread:
+        print("Stopping Bottle server...")
+        os._exit(0)
 
-def refresh_access_token(client_id, client_secret, refresh_token):
-    """Refresh the access token using the refresh token."""
-    response = requests.post("https://www.strava.com/oauth/token", data={
-        'client_id': client_id, 'client_secret': client_secret,
-        'grant_type': 'refresh_token', 'refresh_token': refresh_token
-    })
-    response.raise_for_status()
-    return response.json()
+# Set up graceful shutdown on Ctrl+C
+signal.signal(signal.SIGINT, lambda sig, frame: stop_bottle_server())
 
-def get_valid_access_token():
-    """Ensure we have a valid access token, refreshing if necessary."""
+def get_valid_access_token(client):
+    """Get or refresh Strava access token."""
+    global auth_code
     tokens = load_tokens()
+
+    # Handle first-time authentication
     if not tokens:
-        auth_url = f"https://www.strava.com/oauth/authorize?client_id={CLIENT_ID}&response_type=code&redirect_uri=http://localhost&scope=activity:read_all&approval_prompt=force"
-        print(f"No tokens found. Get authorization code at:\n{auth_url}")
-        tokens = get_initial_tokens(CLIENT_ID, CLIENT_SECRET, input("Enter authorization code: "))
+        print("Starting authentication flow...")
+        global bottle_thread
+        bottle_thread = Thread(target=lambda: run(app, host="localhost", port=8080), daemon=True)
+        bottle_thread.start()
+        
+        auth_url = f"https://www.strava.com/oauth/authorize?client_id={CLIENT_ID}&response_type=code&redirect_uri=http://localhost:8080/exchange_token&scope=activity:read_all&approval_prompt=force"
+        webbrowser.open(auth_url)
+        
+        while not auth_code: pass  # Wait for auth callback
+        tokens = client.exchange_code_for_token(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, code=auth_code)
         save_tokens(tokens)
-    elif tokens.get("expires_at", 0) <= time():
+
+    # Refresh token if expired
+    if tokens.get("expires_at", 0) <= time():
         print("Refreshing access token...")
-        tokens = refresh_access_token(CLIENT_ID, CLIENT_SECRET, tokens.get("refresh_token"))
+        tokens = client.refresh_access_token(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, refresh_token=tokens["refresh_token"])
         save_tokens(tokens)
-    return tokens["access_token"], tokens["refresh_token"]
+
+    client.access_token = tokens["access_token"]
+
+@app.route("/exchange_token")
+def exchange_token():
+    """Callback endpoint for Strava OAuth."""
+    global auth_code
+    auth_code = request.query.code
+    return "Authorization successful! You can close this window."
 
 def fetch_activities(client, start_date, end_date):
-    """Fetch activities within the specified date range."""
+    """Fetch and format Strava activities."""
     return [{
         "id": activity.id,
+        "name": activity.name,
         "start_date": activity.start_date_local.isoformat(),
         "distance": activity.distance,
         "moving_time": activity.moving_time,
         "elapsed_time": activity.elapsed_time,
         "type": activity.type.root,
-        "average_speed": activity.average_speed
-    } for activity in client.get_activities(after=start_date, before=end_date)
-    if activity.type.root in ("Walk", "Run")]
+        "average_speed": activity.average_speed,
+    } for activity in client.get_activities(after=start_date, before=end_date)]
 
 def main():
-    client = Client(access_token=get_valid_access_token()[0])
+    client = Client()
     try:
+        get_valid_access_token(client)
+        
+        # Get date range from user
         start_date = datetime.strptime(input("Enter start date (YYYY-MM-DD): "), "%Y-%m-%d")
         end_date = datetime.strptime(input("Enter end date (YYYY-MM-DD): "), "%Y-%m-%d")
+        
+        # Fetch and save activities
+        print("Fetching activities...")
         activities = fetch_activities(client, start_date, end_date)
-        print(f"Found {len(activities)} walk or run activities.")
         json.dump(activities, open(OUTPUT_FILE, 'w'), indent=4)
-        print(f"Activities saved to {OUTPUT_FILE}")
+        print(f"Saved {len(activities)} activities to {OUTPUT_FILE}")
+        
     except Exception as e:
         print(f"Error: {e}")
+    finally:
+        stop_bottle_server()
 
 if __name__ == "__main__":
     main()
