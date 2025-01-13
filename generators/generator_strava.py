@@ -79,7 +79,7 @@ def fetch_activities(client, start_date, end_date):
         "moving_time": activity.moving_time,
         "elapsed_time": activity.elapsed_time,
         "type": activity.type.root,
-        "average_speed": activity.average_speed,
+        "average_speed": activity.average_speed
     } for activity in client.get_activities(after=start_date, before=end_date)]
 
 def main():
