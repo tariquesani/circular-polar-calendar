@@ -1,4 +1,7 @@
-import json, os, signal, webbrowser
+import json
+import os
+import signal
+import webbrowser
 from time import time
 from datetime import datetime
 from threading import Thread
@@ -18,13 +21,16 @@ app = Bottle()
 auth_code = None
 bottle_thread = None
 
+
 def load_tokens():
     """Load tokens from file."""
     return json.load(open(TOKENS_FILE)) if os.path.exists(TOKENS_FILE) else {}
 
+
 def save_tokens(tokens):
     """Save tokens to file."""
     json.dump(tokens, open(TOKENS_FILE, 'w'))
+
 
 def stop_bottle_server():
     """Force stop the Bottle server."""
@@ -32,8 +38,10 @@ def stop_bottle_server():
         print("Stopping Bottle server...")
         os._exit(0)
 
+
 # Set up graceful shutdown on Ctrl+C
 signal.signal(signal.SIGINT, lambda sig, frame: stop_bottle_server())
+
 
 def get_valid_access_token(client):
     """Get or refresh Strava access token."""
@@ -44,23 +52,29 @@ def get_valid_access_token(client):
     if not tokens:
         print("Starting authentication flow...")
         global bottle_thread
-        bottle_thread = Thread(target=lambda: run(app, host="localhost", port=8080), daemon=True)
+        bottle_thread = Thread(target=lambda: run(
+            app, host="localhost", port=8080), daemon=True)
         bottle_thread.start()
-        
-        auth_url = f"https://www.strava.com/oauth/authorize?client_id={CLIENT_ID}&response_type=code&redirect_uri=http://localhost:8080/exchange_token&scope=activity:read_all&approval_prompt=force"
+
+        auth_url = f"https://www.strava.com/oauth/authorize?client_id={
+            CLIENT_ID}&response_type=code&redirect_uri=http://localhost:8080/exchange_token&scope=activity:read_all&approval_prompt=force"
         webbrowser.open(auth_url)
-        
-        while not auth_code: pass  # Wait for auth callback
-        tokens = client.exchange_code_for_token(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, code=auth_code)
+
+        while not auth_code:
+            pass  # Wait for auth callback
+        tokens = client.exchange_code_for_token(
+            client_id=CLIENT_ID, client_secret=CLIENT_SECRET, code=auth_code)
         save_tokens(tokens)
 
     # Refresh token if expired
     if tokens.get("expires_at", 0) <= time():
         print("Refreshing access token...")
-        tokens = client.refresh_access_token(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, refresh_token=tokens["refresh_token"])
+        tokens = client.refresh_access_token(
+            client_id=CLIENT_ID, client_secret=CLIENT_SECRET, refresh_token=tokens["refresh_token"])
         save_tokens(tokens)
 
     client.access_token = tokens["access_token"]
+
 
 @app.route("/exchange_token")
 def exchange_token():
@@ -68,6 +82,7 @@ def exchange_token():
     global auth_code
     auth_code = request.query.code
     return "Authorization successful! You can close this window."
+
 
 def fetch_activities(client, start_date, end_date):
     """Fetch and format Strava activities."""
@@ -82,25 +97,30 @@ def fetch_activities(client, start_date, end_date):
         "average_speed": activity.average_speed
     } for activity in client.get_activities(after=start_date, before=end_date)]
 
+
 def main():
     client = Client()
     try:
         get_valid_access_token(client)
-        
+
         # Get date range from user
-        start_date = datetime.strptime(input("Enter start date (YYYY-MM-DD): "), "%Y-%m-%d")
-        end_date = datetime.strptime(input("Enter end date (YYYY-MM-DD): "), "%Y-%m-%d")
-        
+        start_date = datetime.strptime(
+            input("Enter start date (YYYY-MM-DD): "), "%Y-%m-%d")
+        # end_date = datetime.strptime(input("Enter end date (YYYY-MM-DD): "), "%Y-%m-%d")
+        end_date = datetime.today() if not (end_date_input := input(
+            "Just press enter for today or Enter end date (YYYY-MM-DD): ").strip()) else datetime.strptime(end_date_input, "%Y-%m-%d")
+
         # Fetch and save activities
         print("Fetching activities...")
         activities = fetch_activities(client, start_date, end_date)
         json.dump(activities, open(OUTPUT_FILE, 'w'), indent=4)
         print(f"Saved {len(activities)} activities to {OUTPUT_FILE}")
-        
+
     except Exception as e:
         print(f"Error: {e}")
     finally:
         stop_bottle_server()
+
 
 if __name__ == "__main__":
     main()
