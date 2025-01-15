@@ -36,29 +36,6 @@ class BaseCalendarPlotter:
         return max(times) if times else 24
 
     @staticmethod
-    def generate_hour_ticks(start, end, interval=0.25):
-        return [h / 24 for h in BaseCalendarPlotter.frange(start, end, interval)]
-
-    @staticmethod
-    def frange(start, stop, step):
-        """Generate a range of floating-point numbers."""
-        while start < stop:
-            yield round(start, 10)  # Avoid floating-point imprecision
-            start += step
-
-    @staticmethod
-    def generate_hour_labels(start, end, interval=0.25):
-        labels = [' ']  # Start with a blank space
-        time = start + interval  # Start from the first quarter past the start time
-        while time < end - interval:  # Stop before the end time
-            hours = int(time)
-            minutes = int((time % 1) * 60)
-            am_pm = "AM" if hours < 12 else "PM"
-            labels.append(f"{(hours - 1) % 12 + 1}:{minutes:02}{am_pm}")
-            time += interval  # Increment by the specified interval in minutes
-        return labels
-    
-    @staticmethod
     def format_coordinates(coords):
         """ Converts a dictionary with latitude and longitude into a formatted string with degree sign and N/S, E/W postfixes. """
         latitude = coords.get('latitude', 0.0)
@@ -81,34 +58,6 @@ class BaseCalendarPlotter:
         ax.set_yticks([])
 
         return fig, ax
-
-    def add_time_labels(self, ax: plt.Axes) -> None:
-        """Add hour labels and tick marks."""
-        theta = np.linspace(
-            0, 2 * np.pi, self.num_points)  # Circular positions
-        base_angle_rad = 0 * np.pi / 180  # Base angle in radians for label placement
-
-        for i, label in enumerate(self.hour_labels):
-            label = " "+label  # Dirty hack to add some space between axes and labels
-            radius = self.hour_ticks[i]  # Distance from the center
-            angle_rad = base_angle_rad  # Adjust if needed for different placement
-
-            # Convert radians to degrees for label rotation
-            angle_deg = np.degrees(angle_rad)
-
-            # Add hour label with rotation to align along the radial direction
-            ax.text(angle_rad, radius, label,
-                    ha='left', va='center', fontsize=6,
-                    color=self.colors['time_label'], zorder=10,
-                    # Align with the radial direction
-                    # rotation=-(angle_deg - 90),
-                    # Rotate around the anchor point
-                    # rotation_mode='anchor'
-                    )
-
-            # Add tick marks around the circle
-            ax.fill_between(theta, radius - 0.0001, radius + 0.0001,
-                            color='gray', alpha=0.4, zorder=3, linewidth=0)
 
     def add_footer(self, fig: plt.Figure) -> None:
         """Add footers from the layers."""
@@ -156,17 +105,14 @@ class BaseCalendarPlotter:
             from components.layer_months import MonthsLayer
             self.layers.append(MonthsLayer(self.config))
 
-        self.hour_labels = self.generate_hour_labels(
-            self.start_time, self.end_time, self.config.interval)
-        self.hour_ticks = self.generate_hour_ticks(
-            self.start_time, self.end_time, self.config.interval)
+        if getattr(self.config, "use_time_layer", True):
+            from components.layer_time import TimeLayer
+            self.layers.append(TimeLayer(self.config))
 
         fig, ax = self.setup_plot()
 
         for layer in layers:
             layer.plot(ax, self)
-
-        self.add_time_labels(ax)
 
         # Add title
         self.add_title(ax)
