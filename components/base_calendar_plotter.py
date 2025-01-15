@@ -21,10 +21,6 @@ class BaseCalendarPlotter:
         self.year = self.city_data.year
         self.days_in_month = self.city_data.days_in_month
 
-        # Default values
-        self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-                             'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'] 
-
     @property
     def start_time(self):
         """Calculate the earliest start time across all layers."""
@@ -86,33 +82,6 @@ class BaseCalendarPlotter:
 
         return fig, ax
 
-    def add_month_labels(self, ax: plt.Axes, days_in_month: List[int]) -> None:
-        """Add month labels and dividing lines."""
-        cumulative_days = np.cumsum(days_in_month)
-        month_ticks = [(cumulative_days[i - 1] if i > 0 else 0) + days_in_month[i] / 2
-                       for i in range(12)]
-        month_ticks_rad = [tick / self.num_points *
-                           2 * np.pi for tick in month_ticks]
-
-        # ax.set_xticks(month_ticks_rad) # Uncomment to see month ticks
-
-        # Add labels and lines
-        time_range = self.end_time - self.start_time
-        label_height = (self.end_time/24) + (time_range /
-                                             24 * 0.03)  # %age of the time range
-        for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
-            rotation = (-np.degrees(angle) + 180) % 360 - 180
-            ax.text(angle, label_height, label, ha='center', va='center', rotation=rotation,
-                    fontsize=22, color=self.colors['month_label'], fontweight='bold')
-
-            # Add dividing line
-            if i < 11:
-                line_angle = cumulative_days[i] / self.num_points * 2 * np.pi
-            else:
-                line_angle = 2 * np.pi
-            ax.plot([line_angle, line_angle], [self.start_time/24, self.end_time/24],
-                    color=self.colors['divider'], linewidth=0.5, zorder=10)
-
     def add_time_labels(self, ax: plt.Axes) -> None:
         """Add hour labels and tick marks."""
         theta = np.linspace(
@@ -141,7 +110,6 @@ class BaseCalendarPlotter:
             ax.fill_between(theta, radius - 0.0001, radius + 0.0001,
                             color='gray', alpha=0.4, zorder=3, linewidth=0)
 
-
     def add_footer(self, fig: plt.Figure) -> None:
         """Add footers from the layers."""
         footer_dimensions = {
@@ -155,7 +123,6 @@ class BaseCalendarPlotter:
         for layer in self.layers:
             if hasattr(layer, "footer"):
                 layer.footer(fig, footer_dimensions, self)
-                        
 
     def add_title(self, ax: plt.Axes) -> None:
         """Add title to the plot."""
@@ -185,6 +152,10 @@ class BaseCalendarPlotter:
             from components.layer_sunday import SundayLayer
             self.layers.append(SundayLayer(self.config))
 
+        if getattr(self.config, "use_months_layer", True):
+            from components.layer_months import MonthsLayer
+            self.layers.append(MonthsLayer(self.config))
+
         self.hour_labels = self.generate_hour_labels(
             self.start_time, self.end_time, self.config.interval)
         self.hour_ticks = self.generate_hour_ticks(
@@ -195,7 +166,6 @@ class BaseCalendarPlotter:
         for layer in layers:
             layer.plot(ax, self)
 
-        self.add_month_labels(ax, self.days_in_month)
         self.add_time_labels(ax)
 
         # Add title
