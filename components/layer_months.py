@@ -8,6 +8,7 @@ class MonthsLayer(Layer):
         self.config = config
         self.month_labels = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
                            'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+        self.config.months_offset = getattr(self.config, 'months_offset', 0.03)  # Default 3% offset from outer edge
 
     @property
     def start_time(self):
@@ -27,7 +28,7 @@ class MonthsLayer(Layer):
 
         # Add labels and lines
         time_range = base.end_time - base.start_time
-        label_height = (base.end_time/24) + (time_range / 24 * 0.03)  # percentage of the time range
+        label_height = (base.end_time/24) + (time_range / 24 * self.config.months_offset)  # percentage of the time range
         
         for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
             rotation = (-np.degrees(angle) + 180) % 360 - 180
