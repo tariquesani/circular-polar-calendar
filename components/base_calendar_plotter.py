@@ -12,7 +12,8 @@ from components.data_handler import DataHandler
 class BaseCalendarPlotter:
     def __init__(self, config: Config, layers=None):
         self.config = config
-        self.config.file_name = getattr(self.config, 'file_name', self.config.city_name)
+        self.config.file_name = getattr(
+            self.config, 'file_name', self.config.city_name)
         self.layers = layers if layers else []
         self.num_points = self.config.days_in_year
         self.colors = self.config.colors
@@ -77,19 +78,22 @@ class BaseCalendarPlotter:
         """Add title to the plot."""
         try:
             font_props = {k: FontProperties(fname=f'./fonts/Arvo-{v}.ttf', size=s)
-                        for k, v, s in [('bold', 'Bold', 64),
-                                    ('regular', 'Regular', 20),
-                                    ('year', 'Regular', 48)]}
+                          for k, v, s in [('bold', 'Bold', 64),
+                                          ('regular', 'Regular', 20),
+                                          ('year', 'Regular', 48)]}
         except:
             font_props = {k: FontProperties(weight=w, size=s)
-                        for k, (w, s) in {'bold': ('bold', 64),
-                                        'regular': (None, 20),
-                                        'year': (None, 48)}.items()}
+                          for k, (w, s) in {'bold': ('bold', 64),
+                                            'regular': (None, 20),
+                                            'year': (None, 48)}.items()}
 
-        common_props = {'ha': 'center', 'va': 'center', 'transform': ax.transAxes}
-        ax.text(0.5, 1.23, str(self.year), fontproperties=font_props['year'], **common_props)
-        ax.text(0.5, 1.18, self.config.city_name, fontproperties=font_props['bold'], **common_props)
-        ax.text(0.5, 1.13, self.format_coordinates(self.coordinates), 
+        common_props = {'ha': 'center',
+                        'va': 'center', 'transform': ax.transAxes}
+        ax.text(0.5, 1.23, str(self.year),
+                fontproperties=font_props['year'], **common_props)
+        ax.text(0.5, 1.18, self.config.city_name,
+                fontproperties=font_props['bold'], **common_props)
+        ax.text(0.5, 1.13, self.format_coordinates(self.coordinates),
                 fontproperties=font_props['regular'], **common_props)
 
     def create_plot(self, layers) -> None:
