@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Dict, Any
 
 
 @dataclass
@@ -9,11 +9,21 @@ class Config:
     year: int = 2025
     smoothen: bool = False
     interval: float = 0.25
+    # Add a kwargs field to capture additional attributes
+    kwargs: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        # Set any additional attributes from kwargs
+        for key, value in self.kwargs.items():
+            setattr(self, key, value)
+        # Clean up kwargs
+        delattr(self, 'kwargs')
 
     @property
     def days_in_year(self) -> int:
         """Calculate number of days in the year accounting for leap years."""
         return 366 if self.year % 4 == 0 and (self.year % 100 != 0 or self.year % 400 == 0) else 365
+
 
 @dataclass
 class SunData:
