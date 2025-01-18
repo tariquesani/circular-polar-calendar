@@ -12,21 +12,21 @@ interval: .25 # Optional, defaults to 15, in minutes, passed as fraction of hour
 # Ensure that there are 2 spaces before each color line
 #
 # Default
-colors:
-  night: "#011F26"
-  daylight: "#fbba43"
-  astro: "#092A38"
-  nautical: "#0A3F4D"
-  civil: "#1C5C7C"
-  background: "#faf0e6"
-  divider: "#02735E"
-  dial: "#FFFFFF"
-  time_label: "#e7fdeb"
-  month_label: "#2F4F4F"
-  sunday_label: "#696969"
-  title_text: "#000000"
-  temperature: "YlOrRd" # Colormap for temperature band, see https://matplotlib.org/stable/gallery/color/colormap_reference.html 
-  precipitation: "Blues" # Colormap for precipitation
+# colors:
+#   night: "#011F26"
+#   daylight: "#fbba43"
+#   astro: "#092A38"
+#   nautical: "#0A3F4D"
+#   civil: "#1C5C7C"
+#   background: "#faf0e6"
+#   divider: "#02735E"
+#   dial: "#FFFFFF"
+#   time_label: "#e7fdeb"
+#   month_label: "#2F4F4F"
+#   sunday_label: "#696969"
+#   title_text: "#000000"
+#   temperature: "YlOrRd" # Colormap for temperature band, see https://matplotlib.org/stable/gallery/color/colormap_reference.html 
+#   precipitation: "Blues" # Colormap for precipitation
 
 # Iceland
 # colors:
@@ -61,3 +61,20 @@ colors:
 #   title_text: "#000000"
 #   temperature: "Greys"
 #   precipitation: "Greys"
+
+# Dark mode for wallpapers
+colors:
+  night: "#011F26"
+  daylight: "#fbba43"
+  astro: "#092A38"
+  nautical: "#0A3F4D"
+  civil: "#1C5C7C"
+  background: "#1a1a1a"    # Dark background
+  divider: "#02735E"
+  dial: "#FFFFFF"
+  time_label: "#e7fdeb"
+  month_label: "#808080"   # Softer gray for month labels
+  sunday_label: "#696969"
+  title_text: "#a6a6a6"    # Subtle grey for better contrast
+  temperature: "YlOrRd"
+  precipitation: "Blues"

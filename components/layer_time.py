@@ -91,7 +91,7 @@ class TimeLayer(Layer):
 
                 # Add hour label with rotation to align along the radial direction
                 ax.text(angle_rad, radius, label,
-                       ha=ha, va='center', fontsize=6,
+                       ha=ha, va='center', fontsize=9,
                        color=self.config.colors['time_label'], zorder=10,
                        rotation=text_angle)
 

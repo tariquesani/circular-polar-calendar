@@ -65,31 +65,49 @@ class WallpaperCalendarPlotter(BaseCalendarPlotter):
                                           'regular': (None, 16),
                                           'year': (None, 36)}.items()}
 
-        common_props = {'ha': 'left',
-                       'va': 'center',
-                       'transform': ax.figure.transFigure}
+        common_props = {
+            'ha': 'right',
+            'va': 'center',
+            'transform': ax.figure.transFigure,
+            'color': self.config.colors['title_text']
+        }
         
         # Position title elements in top-right area
-        ax.text(0.7, 0.9, str(self.year),
+        ax.text(0.95, 0.9, str(self.year),
                 fontproperties=font_props['year'], **common_props)
-        ax.text(0.7, 0.85, self.config.city_name,
+        ax.text(0.95, 0.85, self.config.city_name,
                 fontproperties=font_props['bold'], **common_props)
-        ax.text(0.7, 0.8, self.format_coordinates(self.coordinates),
+        ax.text(0.95, 0.8, self.format_coordinates(self.coordinates),
                 fontproperties=font_props['regular'], **common_props)
 
     def add_footer(self, fig: plt.Figure) -> None:
         """Add footers from the layers in vertical layout on right side."""
+        # For wallpaper layout, stack footers vertically on the right side
         footer_dimensions = {
-            "height": 0.6,
-            "width": 0.25,
-            "left": 0.7,
-            "bottom": 0.2
+            "height": 0.15,      # Height for each footer element
+            "width": 0.25,       # Width of the footer area
+            "left": 0.7,         # Position from left
+            "bottom": 0.2,       # Starting position from bottom
+            "vertical_gap": 0.1, # Gap between footer elements
+            "is_wallpaper": True # Flag to indicate wallpaper layout
         }
+
+        # Calculate positions for each footer
+        num_footers = sum(1 for layer in self.layers if hasattr(layer, "footer"))
+        current_bottom = footer_dimensions["bottom"]
 
         # Ask each layer to render its footer
         for layer in self.layers:
             if hasattr(layer, "footer"):
-                layer.footer(fig, footer_dimensions, self)
+                # Create dimensions for this specific footer
+                this_footer_dims = footer_dimensions.copy()
+                this_footer_dims["bottom"] = current_bottom
+                
+                # Render footer
+                layer.footer(fig, this_footer_dims, self)
+                
+                # Move up for next footer
+                current_bottom += footer_dimensions["height"] + footer_dimensions["vertical_gap"]
 
     def create_plot(self, layers) -> None:
         """Create and save the complete wallpaper plot."""
@@ -113,7 +131,7 @@ class WallpaperCalendarPlotter(BaseCalendarPlotter):
             layer.plot(ax, self)
 
         self.add_title(ax)
-        # self.add_footer(fig)
+        # self.add_footer(fig)  # Commented out for cleaner wallpaper layout
         
         # Save with exact dimensions
         plt.savefig(f'./png/{self.config.file_name}.png',
