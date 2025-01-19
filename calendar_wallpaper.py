@@ -34,7 +34,6 @@ def main():
         config = load_config()
         config.city_name = sys.argv[1] if len(sys.argv) > 1 else config.city_name
         config.file_name = f"{config.city_name}_Wallpaper"
-        config.wallpaper_mode = True
         config.running_target = 1000 # Yearly target for running in km
 
         # Load data and initialize layers
