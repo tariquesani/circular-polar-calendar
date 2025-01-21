@@ -2,7 +2,7 @@
 
 A Python-based visualization tool that generates beautiful circular calendars showing daylight patterns, temperature data, precipitation, and optional Strava fitness tracking throughout the year. Perfect for visualizing annual patterns and creating unique wall art or desktop wallpapers.
 
-![Example Calendar](docs/example.png)
+![Dawn Fitness Calendar](png/Nagpur_Fitness.png)
 
 ## Features
 
@@ -40,7 +40,7 @@ A Python-based visualization tool that generates beautiful circular calendars sh
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/circular-calendar.git
+git https://github.com/tariquesani/circular-polar-calendar.git
 cd circular-polar-calendar
 ```
 
@@ -212,8 +212,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Astral](https://astral.readthedocs.io/) for sun calculations
 - [Strava API](https://developers.strava.com/) for fitness data
 - [Meteostat](https://meteostat.net/) for weather data
+- Inspired by [u/imluke](https://www.reddit.com/user/imluke)'s [design](https://www.sunlightcalendar.com/design)
+- Initial code from [https://github.com/vizagite/calendar]
 
 ## Support
 
 For issues and feature requests, please use the GitHub issue tracker.
-```
