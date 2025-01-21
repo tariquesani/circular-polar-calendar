@@ -3,6 +3,7 @@
 A Python-based visualization tool that generates beautiful circular calendars showing daylight patterns, temperature data, precipitation, and optional Strava fitness tracking throughout the year. Perfect for visualizing annual patterns and creating unique wall art or desktop wallpapers.
 
 ![Dawn Fitness Calendar](png/Nagpur_Fitness.png)
+Calendar showing Sunrise and dawn twilight timings, outer ring shows average day temperature. Overlaid with Strava layer showing individual runs as red lines (1km = 1%), walks as blue line. Cumulative distance for the year as a green line starting from the center. Target of 1000km for the year (configurable) as a dotted spiral line.  
 
 ## Features
 
