@@ -3,9 +3,20 @@
 A Python-based visualization tool that generates beautiful circular calendars showing daylight patterns, temperature data, precipitation, and optional Strava fitness tracking throughout the year. Perfect for visualizing annual patterns and creating unique wall art or desktop wallpapers.
 
 ![Dawn Fitness Calendar](png/Nagpur_Fitness.png)
-Calendar showing Sunrise and dawn twilight timings, outer ring shows average day temperature. Overlaid with Strava layer showing individual runs as red lines (1km = 1%), walks as blue line. Cumulative distance for the year as a green line starting from the center. Target of 1000km for the year (configurable) as a dotted spiral line.  
+Calendar showing sunrise and dawn twilight timings (civil, nautical and astronomical) , outer ring shows average day temperature as a heatmap. Overlaid with Strava layer showing individual runs as red lines, walks as blue line. The lines start at the start time of the activity. Length of of the line is proportional to distance covered. Cumulative distance for the year as a green line starting from the center. Target of 1000km for the year (configurable) as a dotted spiral line.  
+
 
 ## Features
+
+- **Extensive Customization**:
+  - Multiple pre-defined color schemes:
+    - Default: Vibrant twilight colors
+    - Iceland: Cool blue tones
+    - Monochrome: Black and white
+    - Dark mode: Perfect for desktop wallpapers
+  - Configurable and composable data layers and displays
+  - Adjustable dimensions and positions
+  - Custom fonts with system fallbacks
 
 - **Multiple Calendar Types**:
   - **Dawn Calendar**: Visualizes sunrise, twilight phases, temperature and rain data
@@ -21,15 +32,7 @@ Calendar showing Sunrise and dawn twilight timings, outer ring shows average day
   - Strava activity tracking (running, walking and cumulative distances)
   - Month markers and Sunday highlights
 
-- **Extensive Customization**:
-  - Multiple pre-defined color schemes:
-    - Default: Vibrant twilight colors
-    - Iceland: Cool blue tones
-    - Monochrome: Black and white
-    - Dark mode: Perfect for desktop wallpapers
-  - Configurable data layers and displays
-  - Adjustable dimensions and positions
-  - Custom fonts with system fallbacks
+
 
 ## Prerequisites
 
