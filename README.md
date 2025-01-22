@@ -1,10 +1,13 @@
-# Circular Calendar Visualization
+# Circular Polar Calendar
 
-A Python-based visualization tool that generates beautiful circular calendars showing daylight patterns, temperature data, precipitation, and optional Strava fitness tracking throughout the year. Perfect for visualizing annual patterns and creating unique wall art or desktop wallpapers.
+A Python-based, modular, highly configurable and extensible visualization tool that generates beautiful circular calendars showing daylight patterns, temperature data, precipitation, and Strava fitness tracking throughout the year. Perfect for visualizing annual patterns and creating unique wall art or desktop wallpapers.
 
+## Sample Visualization 
 ![Dawn Fitness Calendar](png/Nagpur_Fitness.png)
 Calendar showing sunrise and dawn twilight timings (civil, nautical and astronomical) , outer ring shows average day temperature as a heatmap. Overlaid with Strava layer showing individual runs as red lines, walks as blue line. The lines start at the start time of the activity. Length of of the line is proportional to distance covered. Cumulative distance for the year as a green line starting from the center. Target of 1000km for the year (configurable) as a dotted spiral line.  
 
+## More Examples
+More examples can be found [here](png/). Do read the comments in the respective calendar_*.py files and the documentation for [config](Config.md)
 
 ## Features
 
