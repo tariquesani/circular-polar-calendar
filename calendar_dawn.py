@@ -7,6 +7,7 @@ from components.data_handler import DataHandler
 from components.base_calendar_plotter import BaseCalendarPlotter
 from components.layer_dawn import DawnLayer
 from components.layer_temperature import TemperatureLayer
+from components.layer_holidays import HolidaysLayer
 
 
 def main():
@@ -26,7 +27,8 @@ def main():
         plotter = BaseCalendarPlotter(config)
         plotter.create_plot(layers=[
             DawnLayer(config),
-            TemperatureLayer(config)
+            TemperatureLayer(config),
+            HolidaysLayer(config)
         ])
 
     except ConfigurationError as e:

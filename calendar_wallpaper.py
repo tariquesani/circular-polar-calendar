@@ -10,6 +10,7 @@ from components.wallpaper_calendar_plotter import WallpaperCalendarPlotter
 from components.layer_dawn import DawnLayer
 from components.layer_temperature import TemperatureLayer
 from components.layer_strava import StravaLayer
+from components.layer_holidays import HolidaysLayer
 
 @dataclass
 class WallpaperConfig:
@@ -64,7 +65,8 @@ def main():
         plotter.create_plot(layers=[
             DawnLayer(config),
             TemperatureLayer(config),
-            StravaLayer(config)
+            StravaLayer(config),
+            HolidaysLayer(config)
         ])
 
     except ConfigurationError as e:

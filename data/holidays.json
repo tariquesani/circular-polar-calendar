@@ -1,0 +1,23 @@
+{
+  "holidays": [
+    {"name": "Chhatrapati Shivaji Maharaj Jayanti", "date": "2025-02-19"},
+    {"name": "Mahashivratri", "date": "2025-02-26"},
+    {"name": "Holi (2nd Day)", "date": "2025-03-14"},
+    {"name": "Ramzan Id (Id-Ul-Fitr)", "date": "2025-03-31"},
+    {"name": "Mahavir Janmakalyanak", "date": "2025-04-10"},
+    {"name": "Dr. Babasaheb Ambedkar Jayanti", "date": "2025-04-14"},
+    {"name": "Good Friday", "date": "2025-04-18"},
+    {"name": "Maharashtra Day", "date": "2025-05-01"},
+    {"name": "Buddha Pournima", "date": "2025-05-12"},
+    {"name": "Bakr Id (Id-Uz-Zuha)", "date": "2025-06-07"},
+    {"name": "Independence Day", "date": "2025-08-15"},
+    {"name": "Ganesh Chaturthi", "date": "2025-08-27"},
+    {"name": "Id-e-Milad", "date": "2025-09-05"},
+    {"name": "Mahatma Gandhi Jayanti / Dasara", "date": "2025-10-02"},
+    {"name": "Diwali Amavasya (Laxmi Pujan)", "date": "2025-10-21"},
+    {"name": "Diwali (Balipratipada)", "date": "2025-10-22"},
+    {"name": "Bhaubeej", "date": "2025-10-23"},
+    {"name": "Guru Nanak Jayanti", "date": "2025-11-05"},
+    {"name": "Christmas", "date": "2025-12-25"}
+  ]
+}
