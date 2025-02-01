@@ -82,18 +82,18 @@ class HolidaysLayer(Layer):
             else:
                 padded_name = holiday['name'].rjust(max_name_length)  # Right padding for first half
             
-            name_radius = label_radius - relative_offset * 10  # Adjust offset as needed
+            name_radius = label_radius - relative_offset * 10.5 # Adjust offset as needed
             rotation_angle = (-np.degrees(angle) + 180) % 360 - 90
             if is_second_half:
                 rotation_angle += 180  # Flip the name for the second half of the year
             
             ax.text(angle, name_radius, padded_name,
                 ha='center', va='center',  # Keep alignment centered
-                fontsize=6,
+                fontsize=8,
                 fontproperties=self.font_prop,  # Use loaded monospaced font
                 color=getattr(self.config.colors, 'holiday_name', '#FF0000'),
                 rotation=rotation_angle,
-                zorder=5)
+                zorder=50)
             
             # Add marker dot
             marker_radius = label_radius + relative_offset
