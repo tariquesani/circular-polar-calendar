@@ -5,12 +5,15 @@ import matplotlib.pyplot as plt
 from datetime import date, datetime, timedelta
 import json
 from pathlib import Path
+import matplotlib.font_manager as fm  # Add import for font manager
 
 class HolidaysLayer(Layer):
     def __init__(self, config):
         self.config = config
         self.holidays = self._load_holidays()
         self.include_sundays = getattr(config, 'include_sundays', True)  # Add config for including Sundays
+        self.font_path = 'fonts/BPmono.ttf'  # Path to the monospaced font
+        self.font_prop = fm.FontProperties(fname=self.font_path)  # Load the font properties
 
     def _load_holidays(self):
         """Load holidays from JSON file."""
@@ -48,6 +51,9 @@ class HolidaysLayer(Layer):
         label_radius = (base.end_time/24) - relative_offset
         cum_days = np.cumsum(base.days_in_month)
         
+        # Calculate the maximum length of holiday names for padding
+        max_name_length = max(len(holiday['name']) for holiday in self.holidays) if self.holidays else 0
+
         # Plot holidays
         for holiday in self.holidays:
             if holiday['date'].year != base.year:
@@ -65,6 +71,28 @@ class HolidaysLayer(Layer):
                 fontsize=8,
                 color=getattr(self.config.colors, 'holiday_label', '#FF0000'),
                 rotation=(-np.degrees(angle) + 180) % 360 - 180,
+                zorder=5)
+            
+            # Determine if the holiday is in the second half of the year
+            is_second_half = holiday['date'].month > 6
+            
+            # Add holiday name with padding and monospaced font
+            if is_second_half:
+                padded_name = holiday['name'].ljust(max_name_length)  # Left padding for second half
+            else:
+                padded_name = holiday['name'].rjust(max_name_length)  # Right padding for first half
+            
+            name_radius = label_radius - relative_offset * 10  # Adjust offset as needed
+            rotation_angle = (-np.degrees(angle) + 180) % 360 - 90
+            if is_second_half:
+                rotation_angle += 180  # Flip the name for the second half of the year
+            
+            ax.text(angle, name_radius, padded_name,
+                ha='center', va='center',  # Keep alignment centered
+                fontsize=6,
+                fontproperties=self.font_prop,  # Use loaded monospaced font
+                color=getattr(self.config.colors, 'holiday_name', '#FF0000'),
+                rotation=rotation_angle,
                 zorder=5)
             
             # Add marker dot
