@@ -21,12 +21,12 @@ class SundayLayer(Layer):
         first = date(base.year, 1, 1)
         first_sunday = ((first + timedelta(days=(6 - first.weekday()) % 7)) - first).days
         sundays = range(first_sunday, base.config.days_in_year, 7)
-        relative_offset = (base.end_time - base.start_time)/24 * 0.018
+        relative_offset = (base.end_time - base.start_time)/24 * 0.013
         label_radius = (base.end_time/24) - relative_offset
         cum_days = np.cumsum(base.days_in_month)
         
         for day_idx in sundays:
-            angle = day_idx / base.config.days_in_year * 2 * np.pi
+            angle = (day_idx + 0.5) / base.config.days_in_year * 2 * np.pi
             month_idx = next((i for i, total in enumerate(cum_days) if day_idx < total), 11)
             month_day = day_idx - (cum_days[month_idx - 1] if month_idx > 0 else 0) + 1
             
