@@ -59,6 +59,7 @@ def main():
         }
         
         config.wallpaper = wallpaper_config
+        config.use_sunday_layer = False
 
         # Create and combine layers
         plotter = WallpaperCalendarPlotter(config)
