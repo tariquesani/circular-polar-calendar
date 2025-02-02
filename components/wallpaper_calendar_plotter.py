@@ -34,7 +34,8 @@ class WallpaperCalendarPlotter(BaseCalendarPlotter):
         
         # Calculate rotation for current month
         rotation = self.calculate_rotation_for_current_month()
-        ax.set_theta_offset(np.pi/2 - np.radians(rotation))
+        self.theta_offset = np.pi/2 + np.radians(rotation)
+        ax.set_theta_offset(self.theta_offset)
         
         ax.set_ylim(self.start_time/24, self.end_time/24)
         
@@ -47,7 +48,7 @@ class WallpaperCalendarPlotter(BaseCalendarPlotter):
 
     def calculate_rotation_for_current_month(self):
         """Calculate rotation needed to put current month at top."""
-        current_month = 1 # datetime.now().month
+        current_month = 1 #datetime.now().month
         days_before_month = sum(self.days_in_month[:current_month-1])
         angle = (days_before_month / self.config.days_in_year) * 360
         return angle

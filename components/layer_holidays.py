@@ -65,12 +65,15 @@ class HolidaysLayer(Layer):
             month_idx = next((i for i, total in enumerate(cum_days) if day_of_year < total), 11)
             month_day = day_of_year - (cum_days[month_idx - 1] if month_idx > 0 else 0) + 1
             
+            rotation = (-np.degrees(angle) + 180) % 360 - 180
+            adjusted_rotation = rotation + np.degrees(base.theta_offset) - 90
+            
             # Plot date marker
             ax.text(angle, label_radius, str(month_day),
                 ha='center', va='center', 
                 fontsize=8,
                 color=getattr(self.config.colors, 'holiday_label', '#FF0000'),
-                rotation=(-np.degrees(angle) + 180) % 360 - 180,
+                rotation=adjusted_rotation,
                 zorder=5)
             
             # Determine if the holiday is in the second half of the year
@@ -83,16 +86,18 @@ class HolidaysLayer(Layer):
                 padded_name = holiday['name'].rjust(max_name_length)  # Right padding for first half
             
             name_radius = label_radius - relative_offset * 10.5 # Adjust offset as needed
-            rotation_angle = (-np.degrees(angle) + 180) % 360 - 90
+            rotation = (-np.degrees(angle) + 180) % 360 - 90                
+            rotation = rotation + np.degrees(base.theta_offset) - 90
+
             if is_second_half:
-                rotation_angle += 180  # Flip the name for the second half of the year
+                rotation += 180  # Flip the name for the second half of the year
             
             ax.text(angle, name_radius, padded_name,
                 ha='center', va='center',  # Keep alignment centered
                 fontsize=8,
                 fontproperties=self.font_prop,  # Use loaded monospaced font
                 color=getattr(self.config.colors, 'holiday_name', '#FF0000'),
-                rotation=rotation_angle,
+                rotation=rotation,
                 zorder=50)
             
             # Add marker dot
@@ -112,11 +117,13 @@ class HolidaysLayer(Layer):
                 angle = (day_idx + 0.5) / base.config.days_in_year * 2 * np.pi
                 month_idx = next((i for i, total in enumerate(cum_days) if day_idx < total), 11)
                 month_day = day_idx - (cum_days[month_idx - 1] if month_idx > 0 else 0) + 1
+                rotation = (-np.degrees(angle) + 180) % 360 - 180
+                adjusted_rotation = rotation + np.degrees(base.theta_offset) - 90
                 
                 ax.text(angle, label_radius, str(month_day),
                     ha='center', va='center', fontsize=7, 
                     color=getattr(self.config.colors, 'sunday_label', '#0000FF'),
-                    rotation=(-np.degrees(angle) + 180) % 360 - 180, 
+                    rotation=adjusted_rotation, 
                     zorder=5, fontweight='normal')
 
     def footer(self, fig: plt.Figure, dims, base: BaseCalendarPlotter):

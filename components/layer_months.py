@@ -31,10 +31,11 @@ class MonthsLayer(Layer):
         label_height = (base.end_time/24) + (time_range / 24 * self.config.months_offset)  # percentage of the time range
         
         for i, (angle, label) in enumerate(zip(month_ticks_rad, self.month_labels)):
-            rotation = (-np.degrees(angle) + 180) % 360 - 180
+            rotation = (-np.degrees(angle) + 180) % 360 + 90
+            adjusted_rotation = rotation + np.degrees(base.theta_offset)
             ax.text(angle, label_height, label, 
                    ha='center', va='center', 
-                   rotation=rotation,
+                   rotation=adjusted_rotation,
                    fontsize=22, 
                    color=self.config.colors['month_label'], 
                    fontweight='bold')

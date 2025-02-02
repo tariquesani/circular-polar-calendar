@@ -90,7 +90,8 @@ class TimeLayer(Layer):
                     label = " " + label.strip()  # Move spacing to left side
 
                 # Add hour label with rotation to align along the radial direction
-                ax.text(angle_rad, radius, label,
+                rotation_radians = base.theta_offset - np.pi/2
+                ax.text(angle_rad + rotation_radians, radius, label,
                        ha=ha, va='center', fontsize=9,
                        color=self.config.colors['time_label'], zorder=10,
                        rotation=text_angle)
