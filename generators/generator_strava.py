@@ -98,21 +98,39 @@ def fetch_activities(client, start_date, end_date):
     } for activity in client.get_activities(after=start_date, before=end_date)]
 
 
+def get_last_activity_date():
+    """Get the last activity date from the output file."""
+    if os.path.exists(OUTPUT_FILE):
+        activities = json.load(open(OUTPUT_FILE))
+        if activities:
+            last_activity = max(activities, key=lambda x: x["start_date"])
+            return datetime.fromisoformat(last_activity["start_date"])
+    return None
+
+
 def main():
     client = Client()
     try:
         get_valid_access_token(client)
 
-        # Get date range from user
-        start_date = datetime.strptime(
-            input("Enter start date (YYYY-MM-DD): "), "%Y-%m-%d")
-        # end_date = datetime.strptime(input("Enter end date (YYYY-MM-DD): "), "%Y-%m-%d")
+        # Check if incremental mode is enabled
+        incremental = input("Do you want to fetch activities incrementally? (yes/no): ").strip().lower() == "yes"
+        if incremental:
+            start_date = get_last_activity_date() or datetime.strptime(input("Enter start date (YYYY-MM-DD): "), "%Y-%m-%d")
+        else:
+            start_date = datetime.strptime(input("Enter start date (YYYY-MM-DD): "), "%Y-%m-%d")
+
         end_date = datetime.today() if not (end_date_input := input(
             "Just press enter for today or Enter end date (YYYY-MM-DD): ").strip()) else datetime.strptime(end_date_input, "%Y-%m-%d")
 
         # Fetch and save activities
         print("Fetching activities...")
         activities = fetch_activities(client, start_date, end_date)
+        
+        if incremental and os.path.exists(OUTPUT_FILE):
+            existing_activities = json.load(open(OUTPUT_FILE))
+            activities = existing_activities + activities
+
         json.dump(activities, open(OUTPUT_FILE, 'w'), indent=4)
         print(f"Saved {len(activities)} activities to {OUTPUT_FILE}")
 
