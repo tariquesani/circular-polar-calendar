@@ -47,7 +47,7 @@ class HolidaysLayer(Layer):
             return
 
         # Calculate positioning
-        relative_offset = (base.end_time - base.start_time)/24 * 0.013
+        relative_offset = (base.end_time - base.start_time)/24 * 0.015
         label_radius = (base.end_time/24) - relative_offset
         cum_days = np.cumsum(base.days_in_month)
         
@@ -121,8 +121,8 @@ class HolidaysLayer(Layer):
                 adjusted_rotation = rotation + np.degrees(base.theta_offset) - 90
                 
                 ax.text(angle, label_radius, str(month_day),
-                    ha='center', va='center', fontsize=7, 
-                    color=getattr(self.config.colors, 'sunday_label', '#0000FF'),
+                    ha='center', va='center', fontsize=8, 
+                    color=getattr(self.config.colors, 'sunday_label', 'gray'),
                     rotation=adjusted_rotation, 
                     zorder=5, fontweight='normal')
 
