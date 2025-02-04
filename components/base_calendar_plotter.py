@@ -21,7 +21,7 @@ class BaseCalendarPlotter:
         self.coordinates = self.city_data.coordinates
         self.year = self.city_data.year
         self.days_in_month = self.city_data.days_in_month
-        self.theta_offset = 1.5707963267948966
+        self.theta_offset = 1.5707963267948966 # np.pi/2 (90 degrees in radians)
 
     @property
     def start_time(self):
