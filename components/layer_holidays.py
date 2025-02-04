@@ -76,8 +76,8 @@ class HolidaysLayer(Layer):
                 rotation=adjusted_rotation,
                 zorder=5)
             
-            # Determine if the holiday is in the second half of the year
-            is_second_half = holiday['date'].month > 6
+            # Determine if the holiday is in the second half of the circle
+            is_second_half = adjusted_rotation > 0 
             
             # Add holiday name with padding and monospaced font
             if is_second_half:
