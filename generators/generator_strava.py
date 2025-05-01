@@ -127,6 +127,12 @@ def main():
         print("Fetching activities...")
         activities = fetch_activities(client, start_date, end_date)
         
+        if activities:
+            print(f"{len(activities)} new activities found.")
+        else:
+            print("No new activities found.")
+            return
+        
         if incremental and os.path.exists(OUTPUT_FILE):
             existing_activities = json.load(open(OUTPUT_FILE))
             activities = existing_activities + activities
