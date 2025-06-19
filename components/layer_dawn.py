@@ -27,7 +27,7 @@ class DawnLayer(Layer):
     @property
     def end_time(self):
         """Calculate the latest sunrise."""
-        return math.ceil(max(self.dawn_data.sunrise) * 4) / 4 + 0.25
+        return math.ceil(max(self.dawn_data.sunrise) * 4) / 4 + 1.25
 
     def plot(self, ax: plt.Axes, base: BaseCalendarPlotter):
         days, smoothen = self.config.days_in_year, self.config.smoothen
