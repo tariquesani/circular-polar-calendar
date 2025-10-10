@@ -8,6 +8,7 @@ class BuilderUI {
         this.apiClient = apiClient;
         this.currentConfig = this.getDefaultConfig();
         this.previewTimeout = null;
+        this.themes = []; // Store themes data
         this.initializeEventListeners();
     }
 
@@ -63,6 +64,7 @@ class BuilderUI {
         });
 
         document.getElementById('theme-select')?.addEventListener('change', () => {
+            console.log('Theme changed, updating config...');
             this.updateConfig();
             this.schedulePreviewUpdate();
         });
@@ -70,6 +72,12 @@ class BuilderUI {
         // Retry button
         document.getElementById('retry-btn')?.addEventListener('click', () => {
             this.generateCalendar();
+        });
+
+        // Generate preview button
+        document.getElementById('generate-preview-btn')?.addEventListener('click', () => {
+            this.updateConfig();
+            this.updatePreview();
         });
     }
 
@@ -202,6 +210,7 @@ class BuilderUI {
     async loadThemes() {
         try {
             const response = await this.apiClient.getThemes();
+            this.themes = response.themes; // Store themes data
             this.renderThemes(response.themes);
         } catch (error) {
             console.error('Failed to load themes:', error);
@@ -220,6 +229,14 @@ class BuilderUI {
             themes.map(theme => `
                 <option value="${theme.id}">${theme.name}</option>
             `).join('');
+        
+        // Set default theme to "default" if available
+        const defaultTheme = themes.find(t => t.id === 'default');
+        if (defaultTheme) {
+            select.value = 'default';
+            console.log('Setting default theme:', defaultTheme.name);
+            this.applyThemeColors('default');
+        }
     }
 
     /**
@@ -250,7 +267,25 @@ class BuilderUI {
         // Get theme colors if selected
         const themeSelect = document.getElementById('theme-select');
         if (themeSelect?.value) {
-            // This will be handled when themes are loaded
+            this.applyThemeColors(themeSelect.value);
+        }
+    }
+
+    /**
+     * Apply theme colors to configuration
+     */
+    applyThemeColors(themeId) {
+        console.log('applyThemeColors called with themeId:', themeId);
+        console.log('Available themes:', this.themes);
+        
+        const theme = this.themes.find(t => t.id === themeId);
+        if (theme && theme.colors) {
+            console.log('Applying theme colors:', theme.name, theme.colors);
+            this.currentConfig.colors = { ...theme.colors };
+            console.log('Updated currentConfig.colors:', this.currentConfig.colors);
+        } else {
+            console.log('Theme not found or no colors defined:', themeId);
+            console.log('Found theme:', theme);
         }
     }
 
@@ -272,6 +307,7 @@ class BuilderUI {
      */
     async updatePreview() {
         console.log('Updating preview with config:', this.currentConfig);
+        console.log('Colors in config:', this.currentConfig.colors);
         
         if (!this.currentConfig.city_name || this.currentConfig.layers.length === 0) {
             console.log('No city or layers selected, showing placeholder');
@@ -282,6 +318,8 @@ class BuilderUI {
         try {
             console.log('Generating preview...');
             this.showPreviewLoading();
+            this.setPreviewButtonLoading(true);
+            
             const response = await this.apiClient.generatePreview(this.currentConfig);
             
             console.log('Preview response:', response);
@@ -296,6 +334,8 @@ class BuilderUI {
         } catch (error) {
             console.error('Preview generation failed:', error);
             this.showPreviewError(error.message);
+        } finally {
+            this.setPreviewButtonLoading(false);
         }
     }
 
@@ -365,11 +405,12 @@ class BuilderUI {
         if (container) {
             container.innerHTML = `
                 <div class="preview-placeholder">
-                    <i class="bi bi-calendar3 display-1 text-muted"></i>
                     <p class="mt-3">Select a city and layers to see preview</p>
                 </div>
             `;
         }
+        // Ensure preview button is enabled
+        this.setPreviewButtonLoading(false);
     }
 
     /**
@@ -383,6 +424,24 @@ class BuilderUI {
                     <i class="bi bi-exclamation-triangle"></i> Preview Error: ${error}
                 </div>
             `;
+        }
+    }
+
+    /**
+     * Set preview button loading state
+     */
+    setPreviewButtonLoading(loading) {
+        const button = document.getElementById('generate-preview-btn');
+        if (button) {
+            if (loading) {
+                button.disabled = true;
+                button.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+                button.classList.add('loading');
+            } else {
+                button.disabled = false;
+                button.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Generate Preview';
+                button.classList.remove('loading');
+            }
         }
     }
 

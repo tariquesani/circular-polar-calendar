@@ -312,3 +312,21 @@ body {
     margin-bottom: 0;
     flex: 1;
 }
+
+/* Preview button loading state */
+#generate-preview-btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#generate-preview-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Preview button hover effect */
+#generate-preview-btn:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+}
