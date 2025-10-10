@@ -142,6 +142,7 @@ class BuilderUI {
         container.querySelectorAll('.layer-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', () => {
                 this.updateConfig();
+                this.updateLayerSpecificSettingsVisibility();
                 this.schedulePreviewUpdate();
             });
         });
@@ -264,11 +265,54 @@ class BuilderUI {
         this.currentConfig.smoothen = document.getElementById('smoothen-toggle')?.checked || false;
         this.currentConfig.interval = parseFloat(document.getElementById('interval-input')?.value) / 60 || 0.25;
 
+        // Get layer-specific settings
+        this.updateLayerSpecificSettings();
+
         // Get theme colors if selected
         const themeSelect = document.getElementById('theme-select');
         if (themeSelect?.value) {
             this.applyThemeColors(themeSelect.value);
         }
+    }
+    
+    /**
+     * Update layer-specific settings based on selected layers
+     */
+    updateLayerSpecificSettings() {
+        // Strava layer settings
+        if (this.currentConfig.layers.includes('strava')) {
+            const runningTarget = document.getElementById('strava-running-target');
+            const footerOffset = document.getElementById('strava-footer-offset');
+            const footerHeight = document.getElementById('strava-footer-height');
+            
+            if (runningTarget) {
+                this.currentConfig.strava_running_target = parseInt(runningTarget.value) || 1000;
+            }
+            if (footerOffset) {
+                this.currentConfig.strava_footer_offset = parseFloat(footerOffset.value) || 0;
+            }
+            if (footerHeight) {
+                this.currentConfig.strava_footer_height = parseFloat(footerHeight.value) || 0.1;
+            }
+        }
+    }
+    
+    /**
+     * Show/hide layer-specific settings based on selected layers
+     */
+    updateLayerSpecificSettingsVisibility() {
+        // Hide all layer-specific settings first
+        document.querySelectorAll('.layer-settings').forEach(settings => {
+            settings.style.display = 'none';
+        });
+        
+        // Show settings for selected layers
+        this.currentConfig.layers.forEach(layerId => {
+            const settingsElement = document.getElementById(`${layerId}-settings`);
+            if (settingsElement) {
+                settingsElement.style.display = 'block';
+            }
+        });
     }
 
     /**

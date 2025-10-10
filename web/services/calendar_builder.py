@@ -243,12 +243,19 @@ class CalendarBuilder:
                     # Get layer class
                     layer_class = self.layer_registry.get_layer_class(layer_id)
                     
+                    # Apply layer-specific settings to config before creating layer
+                    if layer_id == 'strava':
+                        # Set default Strava-specific config values
+                        config.running_target = layer_settings.get('strava_running_target', 1000)  # Default 1000km yearly goal
+                        config.strava_footer_offset = layer_settings.get('strava_footer_offset', 0)
+                        config.strava_footer_height = layer_settings.get('strava_footer_height', 0.1)
+                    
                     # Create layer instance
                     layer = layer_class(config)
                     
-                    # Apply layer-specific settings
+                    # Apply additional layer-specific settings
                     for key, value in layer_settings.items():
-                        if key not in ['type', 'id']:
+                        if key not in ['type', 'id', 'running_target', 'strava_footer_offset', 'strava_footer_height']:
                             setattr(layer, key, value)
                     
                     layers.append(layer)

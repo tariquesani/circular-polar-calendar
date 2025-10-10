@@ -94,8 +94,9 @@ class StravaLayer(Layer):
             ax.plot(theta_points, r_points, color="green", lw=.5,
                     alpha=0.25 if year < self.config.year else 1.0, zorder=15)
 
-        # Plot target line for 1000km goal
-        daily_target = self.config.running_target / base.num_points
+        # Plot target line for yearly goal (default 1000km if not set)
+        running_target = getattr(self.config, 'running_target', 1000)
+        daily_target = running_target / base.num_points
         target_points = [(day / base.num_points * 2 * np.pi,
                          base.start_time / 24 + (day * daily_target) * km_to_radial)
                          for day in range(1, base.num_points + 1)]
@@ -121,7 +122,7 @@ class StravaLayer(Layer):
             ('Run', 'red', 'Individual runs'),
             ('Walk', 'blue', 'Individual walks'),
             ('Progress', 'green', 'Cumulative distance'),
-            ('Target', 'gray', f'{self.config.running_target}km yearly goal')
+            ('Target', 'gray', f'{getattr(self.config, "running_target", 1000)}km yearly goal')
         ]
 
         for x, (label, color, desc) in zip(np.linspace(0.1, 0.9, len(legend_items)), legend_items):
