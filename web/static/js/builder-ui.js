@@ -48,7 +48,9 @@ class BuilderUI {
         // Format type change
         document.querySelectorAll('input[name="format_type"]').forEach(radio => {
             radio.addEventListener('change', () => {
+                this.updateConfig();
                 this.toggleWallpaperSettings();
+                this.schedulePreviewUpdate();
             });
         });
 
@@ -78,6 +80,54 @@ class BuilderUI {
         document.getElementById('generate-preview-btn')?.addEventListener('click', () => {
             this.updateConfig();
             this.updatePreview();
+        });
+
+        // Wallpaper settings
+        document.getElementById('resolution-select')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('position-select')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('dark-mode')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        // Custom resolution inputs
+        document.getElementById('custom-width')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('custom-height')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        // Custom position inputs
+        document.getElementById('custom-pos-left')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('custom-pos-bottom')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('custom-pos-width')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('custom-pos-height')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
         });
     }
 
@@ -265,6 +315,11 @@ class BuilderUI {
         this.currentConfig.smoothen = document.getElementById('smoothen-toggle')?.checked || false;
         this.currentConfig.interval = parseFloat(document.getElementById('interval-input')?.value) / 60 || 0.25;
 
+        // Get wallpaper settings if format is wallpaper
+        if (this.currentConfig.format_type === 'wallpaper') {
+            this.updateWallpaperSettings();
+        }
+
         // Get layer-specific settings
         this.updateLayerSpecificSettings();
 
@@ -275,6 +330,70 @@ class BuilderUI {
         }
     }
     
+    /**
+     * Update wallpaper settings
+     */
+    updateWallpaperSettings() {
+        const resolutionSelect = document.getElementById('resolution-select');
+        const positionSelect = document.getElementById('position-select');
+        const darkModeCheckbox = document.getElementById('dark-mode');
+        
+        // Get resolution settings
+        const resolution = resolutionSelect?.value || 'hd';
+        let width, height;
+        
+        if (resolution === 'custom') {
+            const customWidth = document.getElementById('custom-width');
+            const customHeight = document.getElementById('custom-height');
+            width = parseInt(customWidth?.value) || 1920;
+            height = parseInt(customHeight?.value) || 1080;
+        } else {
+            const resolutions = {
+                'hd': { width: 1920, height: 1080 },
+                '4k': { width: 3840, height: 2160 }
+            };
+            const res = resolutions[resolution] || resolutions['hd'];
+            width = res.width;
+            height = res.height;
+        }
+        
+        // Get position settings
+        const position = positionSelect?.value || 'center';
+        let calendarPosition;
+        
+        if (position === 'custom') {
+            const customPosLeft = document.getElementById('custom-pos-left');
+            const customPosBottom = document.getElementById('custom-pos-bottom');
+            const customPosWidth = document.getElementById('custom-pos-width');
+            const customPosHeight = document.getElementById('custom-pos-height');
+            
+            calendarPosition = {
+                left: parseFloat(customPosLeft?.value) || 0.1,
+                bottom: parseFloat(customPosBottom?.value) || 0.1,
+                width: parseFloat(customPosWidth?.value) || 0.8,
+                height: parseFloat(customPosHeight?.value) || 0.8
+            };
+        } else {
+            const positions = {
+                'center': { left: 0.1, bottom: 0.1, width: 0.8, height: 0.8 },
+                'top-left': { left: 0.05, bottom: 0.6, width: 0.4, height: 0.35 },
+                'top-right': { left: 0.55, bottom: 0.6, width: 0.4, height: 0.35 },
+                'bottom-left': { left: 0.05, bottom: 0.05, width: 0.4, height: 0.35 },
+                'bottom-right': { left: 0.55, bottom: 0.05, width: 0.4, height: 0.35 }
+            };
+            calendarPosition = positions[position] || positions['center'];
+        }
+        
+        // Set wallpaper settings
+        this.currentConfig.wallpaper = {
+            resolution: resolution,
+            width: width,
+            height: height,
+            position: calendarPosition,
+            dark_mode: darkModeCheckbox?.checked || false
+        };
+    }
+
     /**
      * Update layer-specific settings based on selected layers
      */

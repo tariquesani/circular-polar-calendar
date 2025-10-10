@@ -268,8 +268,18 @@ class CalendarBuilder:
                 format_type = web_config.get('format_type', 'calendar')
                 if format_type == 'wallpaper':
                     plotter_class = WallpaperCalendarPlotter
-                    # Add wallpaper-specific config
-                    config.wallpaper = self._create_wallpaper_config(web_config.get('wallpaper', {}))
+                    # Add wallpaper-specific config as attributes
+                    wallpaper_config = self._create_wallpaper_config(web_config.get('wallpaper', {}))
+                    
+                    # Create a simple object to hold wallpaper config
+                    class WallpaperConfig:
+                        def __init__(self, config_dict):
+                            self.width = config_dict['width']
+                            self.height = config_dict['height']
+                            self.calendar_position = config_dict['calendar_position']
+                            self.dark_mode = config_dict['dark_mode']
+                    
+                    config.wallpaper = WallpaperConfig(wallpaper_config)
                 else:
                     plotter_class = BaseCalendarPlotter
                 
