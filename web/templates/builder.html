@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="calendar-builder">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1><i class="bi bi-gear"></i> Calendar Builder</h1>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary" id="save-config-btn">
+                        <i class="bi bi-save"></i> Save Configuration
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="load-config-btn">
+                        <i class="bi bi-folder-open"></i> Load Configuration
+                    </button>
+                    <button type="button" class="btn btn-success" id="generate-btn">
+                        <i class="bi bi-play-circle"></i> Generate Calendar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Three-Column Layout -->
+    <div class="row">
+        <!-- Left Column: Layers -->
+        <div class="col-lg-3 col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-layers"></i> Select Layers
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="layers-container">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading layers...</span>
+                            </div>
+                            <p class="mt-2">Loading available layers...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Column: Preview -->
+        <div class="col-lg-6 col-md-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-eye"></i> Preview
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div id="preview-container">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Generating preview...</span>
+                            </div>
+                            <p class="mt-2">Generating preview...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Configuration -->
+        <div class="col-lg-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-gear-fill"></i> Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- City Selection -->
+                    <div class="mb-3">
+                        <label for="city-select" class="form-label">City</label>
+                        <select class="form-select" id="city-select" name="city_name">
+                            <option value="">Loading cities...</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Selection -->
+                    <div class="mb-3">
+                        <label for="year-input" class="form-label">Year</label>
+                        <input type="number" class="form-control" id="year-input" name="year" value="2025" min="1900" max="2100">
+                    </div>
+
+                    <!-- Color Theme -->
+                    <div class="mb-3">
+                        <label for="theme-select" class="form-label">Color Theme</label>
+                        <select class="form-select" id="theme-select" name="theme">
+                            <option value="">Loading themes...</option>
+                        </select>
+                    </div>
+
+                    <!-- Format Type -->
+                    <div class="mb-3">
+                        <label class="form-label">Output Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="format_type" id="format-calendar" value="calendar" checked>
+                            <label class="form-check-label" for="format-calendar">
+                                Regular Calendar
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="format_type" id="format-wallpaper" value="wallpaper">
+                            <label class="form-check-label" for="format-wallpaper">
+                                Wallpaper
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Wallpaper Settings (Hidden by default) -->
+                    <div id="wallpaper-settings" style="display: none;">
+                        <div class="mb-3">
+                            <label for="wallpaper-resolution" class="form-label">Resolution</label>
+                            <select class="form-select" id="wallpaper-resolution" name="wallpaper_resolution">
+                                <option value="hd">HD (1920x1080)</option>
+                                <option value="4k">4K (3840x2160)</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="dark-mode" name="dark_mode">
+                            <label class="form-check-label" for="dark-mode">
+                                Dark Mode
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="accordion" id="advanced-accordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advanced-collapse">
+                                    <i class="bi bi-sliders"></i> Advanced Settings
+                                </button>
+                            </h2>
+                            <div id="advanced-collapse" class="accordion-collapse collapse" data-bs-parent="#advanced-accordion">
+                                <div class="accordion-body">
+                                    <div class="mb-3">
+                                        <label for="smoothen-toggle" class="form-label">Smooth Data</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="smoothen-toggle" name="smoothen">
+                                            <label class="form-check-label" for="smoothen-toggle">
+                                                Enable data smoothing
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted">Disable for places with Daylight Saving Time</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="interval-input" class="form-label">Time Interval (minutes)</label>
+                                        <input type="number" class="form-control" id="interval-input" name="interval" value="15" min="5" max="60" step="5">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section (Initially Hidden) -->
+    <div class="row mt-4" id="results-section" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-check-circle text-success"></i> Calendar Generated Successfully
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Download Files:</h6>
+                            <div class="btn-group-vertical d-grid gap-2">
+                                <a href="#" class="btn btn-outline-primary" id="download-png-btn">
+                                    <i class="bi bi-image"></i> Download PNG
+                                </a>
+                                <a href="#" class="btn btn-outline-danger" id="download-pdf-btn">
+                                    <i class="bi bi-file-pdf"></i> Download PDF
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Generation Info:</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Filename:</strong> <span id="generated-filename"></span></li>
+                                <li><strong>Generated:</strong> <span id="generation-time"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Section (Initially Hidden) -->
+    <div class="row mt-4" id="error-section" style="display: none;">
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle"></i> Generation Failed
+                </h4>
+                <p id="error-message"></p>
+                <hr>
+                <button type="button" class="btn btn-outline-danger" id="retry-btn">
+                    <i class="bi bi-arrow-clockwise"></i> Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Configuration Modal -->
+<div class="modal fade" id="saveConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Save Configuration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="save-config-form">
+                    <div class="mb-3">
+                        <label for="config-name" class="form-label">Configuration Name</label>
+                        <input type="text" class="form-control" id="config-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="config-description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="config-description" rows="3"></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="config-public">
+                        <label class="form-check-label" for="config-public">
+                            Make this configuration public
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-config-submit">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Configuration Modal -->
+<div class="modal fade" id="loadConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Load Configuration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="config-list-container">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading configurations...</span>
+                        </div>
+                        <p class="mt-2">Loading saved configurations...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

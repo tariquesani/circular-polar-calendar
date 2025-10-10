@@ -5,10 +5,21 @@ import sys
 # Add current directory to Python path for imports
 sys.path.insert(0, os.path.dirname(__file__))
 
+# Configure Jinja2 template engine
+from jinja2 import Environment, FileSystemLoader
+
 app = Bottle()
 
 # Set the template directory
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+
+# Configure Jinja2 environment
+jinja_env = Environment(loader=FileSystemLoader(template_dir))
+
+def jinja_template(template_name, **kwargs):
+    """Render template using Jinja2"""
+    template = jinja_env.get_template(template_name)
+    return template.render(**kwargs)
 
 # Import API routes and mount them
 from api.config_api import (
@@ -40,7 +51,11 @@ app.route('/api/calendar/cleanup', method='POST')(cleanup_files)
 
 @app.route('/')
 def index():
-    return template('index.html', title='Calendar Builder', template_lookup=[template_dir])
+    return jinja_template('index.html', title='Calendar Builder')
+
+@app.route('/builder')
+def builder():
+    return jinja_template('builder.html', title='Calendar Builder')
 
 @app.route('/static/<filename:path>')
 def static(filename):

@@ -1,11 +1,120 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{title}}</title>
-    <meta charset="utf-8">
-</head>
-<body>
-    <h1>Circular Polar Calendar Builder</h1>
-    <p>Welcome to the calendar builder!</p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">
+                <i class="bi bi-calendar3"></i> Circular Polar Calendar Builder
+            </h1>
+            <p class="lead">
+                Create beautiful circular polar calendars with custom layers, themes, and data visualization.
+                Perfect for tracking dawn times, weather patterns, and personal activities throughout the year.
+            </p>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
+            <p>
+                Visualize astronomical data, weather patterns, holidays, and personal activities in an elegant circular format.
+                Generate high-resolution calendars or wallpapers with customizable themes and layers.
+            </p>
+            <a class="btn btn-light btn-lg" href="/builder" role="button">
+                <i class="bi bi-play-circle"></i> Start Building
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-sunrise display-4 text-warning mb-3"></i>
+                <h5 class="card-title">Dawn & Twilight</h5>
+                <p class="card-text">
+                    Visualize sunrise, sunset, and twilight phases (civil, nautical, astronomical) 
+                    throughout the year for any location.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-thermometer display-4 text-danger mb-3"></i>
+                <h5 class="card-title">Weather Data</h5>
+                <p class="card-text">
+                    Display temperature variations and precipitation patterns 
+                    as colorful bands around your calendar.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-palette display-4 text-info mb-3"></i>
+                <h5 class="card-title">Custom Themes</h5>
+                <p class="card-text">
+                    Choose from predefined themes or create your own color schemes 
+                    for personalized calendar designs.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-download"></i> Multiple Formats
+                </h5>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check text-success"></i> High-resolution PNG images</li>
+                    <li><i class="bi bi-check text-success"></i> Print-ready PDF files</li>
+                    <li><i class="bi bi-check text-success"></i> Wallpaper formats (HD, 4K)</li>
+                    <li><i class="bi bi-check text-success"></i> Custom dimensions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-gear"></i> Advanced Features
+                </h5>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check text-success"></i> Save and load configurations</li>
+                    <li><i class="bi bi-check text-success"></i> Live preview updates</li>
+                    <li><i class="bi bi-check text-success"></i> Layer-specific settings</li>
+                    <li><i class="bi bi-check text-success"></i> Data smoothing options</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">
+                <i class="bi bi-info-circle"></i> Getting Started
+            </h4>
+            <p>
+                To create your first calendar, click "Start Building" above. You'll be able to:
+            </p>
+            <ol>
+                <li>Select a city from the available data</li>
+                <li>Choose which layers to include (dawn, temperature, precipitation, etc.)</li>
+                <li>Customize colors and themes</li>
+                <li>Generate and download your calendar</li>
+            </ol>
+            <hr>
+            <p class="mb-0">
+                <strong>Need help?</strong> Check the builder interface for tooltips and hints on each option.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
