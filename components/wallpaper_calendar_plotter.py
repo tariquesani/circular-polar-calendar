@@ -48,7 +48,7 @@ class WallpaperCalendarPlotter(BaseCalendarPlotter):
 
     def calculate_rotation_for_current_month(self):
         """Calculate rotation needed to put current month at top."""
-        current_month = 1 #datetime.now().month # Uncomment for auto rotiation.
+        current_month = datetime.now().month # Uncomment for auto rotation.
         days_before_month = sum(self.days_in_month[:current_month-1]) # + 1 Adding this avoids missing outline for 2 and 8th monhts
         angle = (days_before_month / self.config.days_in_year) * 360
         return angle
