@@ -165,6 +165,20 @@ class APIClient {
     async duplicateConfiguration(name, newName) {
         return this.post(`/api/configurations/${name}/duplicate`, { new_name: newName });
     }
+
+    /**
+     * Load configuration by name
+     */
+    async loadConfiguration(name) {
+        return this.get(`/api/configurations/${name}`);
+    }
+
+    /**
+     * List all configurations
+     */
+    async listConfigurations(publicOnly = false) {
+        return this.get(`/api/configurations?public_only=${publicOnly}`);
+    }
 }
 
 // Create global instance

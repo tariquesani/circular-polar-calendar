@@ -45,6 +45,19 @@ class BuilderUI {
             this.showLoadConfigModal();
         });
 
+        // Save configuration form submission
+        document.getElementById('save-config-form')?.addEventListener('submit', (event) => {
+            this.handleSaveConfig(event);
+        });
+
+        // Save configuration submit button
+        document.getElementById('save-config-submit')?.addEventListener('click', () => {
+            const form = document.getElementById('save-config-form');
+            if (form) {
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+
         // Format type change
         document.querySelectorAll('input[name="format_type"]').forEach(radio => {
             radio.addEventListener('change', () => {
@@ -260,6 +273,44 @@ class BuilderUI {
                 notification.remove();
             }
         }, 3000);
+    }
+
+    /**
+     * Show a notification message
+     */
+    showNotification(message, type = 'info') {
+        const alertClass = {
+            'success': 'alert-success',
+            'error': 'alert-danger',
+            'warning': 'alert-warning',
+            'info': 'alert-info'
+        }[type] || 'alert-info';
+
+        const iconClass = {
+            'success': 'bi-check-circle',
+            'error': 'bi-exclamation-triangle',
+            'warning': 'bi-exclamation-triangle',
+            'info': 'bi-info-circle'
+        }[type] || 'bi-info-circle';
+
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; max-width: 350px;';
+        notification.innerHTML = `
+            <i class="bi ${iconClass}"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
     }
 
     /**
@@ -792,8 +843,57 @@ class BuilderUI {
      * Show save configuration modal
      */
     showSaveConfigModal() {
+        // Clear the form
+        document.getElementById('save-config-form').reset();
+        
         const modal = new bootstrap.Modal(document.getElementById('saveConfigModal'));
         modal.show();
+    }
+
+    /**
+     * Handle save configuration form submission
+     */
+    async handleSaveConfig(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        const name = formData.get('config-name');
+        const description = formData.get('config-description') || '';
+        const isPublic = formData.get('config-public') === 'on';
+        
+        if (!name.trim()) {
+            this.showNotification('Configuration name is required', 'error');
+            return;
+        }
+        
+        try {
+            // Get current configuration
+            this.updateConfig();
+            const configData = { ...this.currentConfig };
+            
+            // Save configuration
+            const response = await this.apiClient.saveConfiguration({
+                name: name.trim(),
+                description: description.trim(),
+                config_data: configData,
+                is_public: isPublic,
+                tags: []
+            });
+            
+            if (response.success) {
+                this.showNotification(`Configuration "${name}" saved successfully!`, 'success');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('saveConfigModal'));
+                modal.hide();
+            } else {
+                this.showNotification('Failed to save configuration', 'error');
+            }
+        } catch (error) {
+            console.error('Save configuration error:', error);
+            this.showNotification('Failed to save configuration: ' + (error.message || 'Unknown error'), 'error');
+        }
     }
 
     /**
@@ -809,8 +909,244 @@ class BuilderUI {
      * Load configurations list
      */
     async loadConfigurationsList() {
-        // This will be implemented in the next step
-        console.log('Loading configurations list...');
+        const container = document.getElementById('config-list-container');
+        if (!container) return;
+        
+        // Show loading state
+        container.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading configurations...</span>
+                </div>
+                <p class="mt-2">Loading configurations...</p>
+            </div>
+        `;
+        
+        try {
+            const response = await this.apiClient.listConfigurations();
+            this.renderConfigurationsList(response.configurations);
+        } catch (error) {
+            console.error('Failed to load configurations:', error);
+            container.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> Failed to load configurations
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Render configurations list
+     */
+    renderConfigurationsList(configurations) {
+        const container = document.getElementById('config-list-container');
+        if (!container) return;
+        
+        if (configurations.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="bi bi-folder-x"></i>
+                    <p class="mt-2">No saved configurations found</p>
+                    <small>Save a configuration first to see it here</small>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = configurations.map(config => `
+            <div class="config-item border rounded p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">
+                            ${config.name}
+                            ${config.is_public ? '<span class="badge bg-success ms-2">Public</span>' : ''}
+                        </h6>
+                        <p class="text-muted mb-2 small">${config.description || 'No description'}</p>
+                        <div class="d-flex gap-2">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar-event"></i> Created: ${new Date(config.created_at).toLocaleDateString()}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> Updated: ${new Date(config.updated_at).toLocaleDateString()}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="builderUI.loadConfiguration('${config.name}')">
+                            <i class="bi bi-download"></i> Load
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="builderUI.duplicateConfiguration('${config.name}')">
+                            <i class="bi bi-files"></i> Copy
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="builderUI.deleteConfiguration('${config.name}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Load a specific configuration
+     */
+    async loadConfiguration(configName) {
+        try {
+            const response = await this.apiClient.loadConfiguration(configName);
+            
+            if (response.error) {
+                this.showNotification('Configuration not found', 'error');
+                return;
+            }
+            
+            // Apply the loaded configuration
+            this.applyConfiguration(response.config_data);
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadConfigModal'));
+            modal.hide();
+            
+            this.showNotification(`Configuration "${configName}" loaded successfully!`, 'success');
+            
+            // Update preview
+            this.schedulePreviewUpdate();
+            
+        } catch (error) {
+            console.error('Load configuration error:', error);
+            this.showNotification('Failed to load configuration: ' + (error.message || 'Unknown error'), 'error');
+        }
+    }
+
+    /**
+     * Apply configuration data to the UI
+     */
+    applyConfiguration(configData) {
+        // Apply basic settings
+        if (configData.city_name) {
+            const citySelect = document.getElementById('city-select');
+            if (citySelect) citySelect.value = configData.city_name;
+        }
+        
+        if (configData.year) {
+            const yearInput = document.getElementById('year-input');
+            if (yearInput) yearInput.value = configData.year;
+        }
+        
+        if (configData.format_type) {
+            const formatRadios = document.querySelectorAll('input[name="format_type"]');
+            formatRadios.forEach(radio => {
+                radio.checked = radio.value === configData.format_type;
+            });
+        }
+        
+        // Apply layers
+        const layerCheckboxes = document.querySelectorAll('.layer-checkbox');
+        layerCheckboxes.forEach(checkbox => {
+            checkbox.checked = configData.layers && configData.layers.includes(checkbox.value);
+        });
+        
+        // Apply theme
+        if (configData.colors && configData.colors.theme) {
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) themeSelect.value = configData.colors.theme;
+        }
+        
+        // Apply wallpaper settings
+        if (configData.wallpaper) {
+            this.applyWallpaperSettings(configData.wallpaper);
+        }
+        
+        // Update current config
+        this.currentConfig = { ...configData };
+        
+        // Update UI visibility
+        this.updateLayerSpecificSettingsVisibility();
+    }
+
+    /**
+     * Apply wallpaper settings to UI
+     */
+    applyWallpaperSettings(wallpaperSettings) {
+        // Resolution
+        const resolutionSelect = document.getElementById('resolution-select');
+        if (resolutionSelect && wallpaperSettings.resolution) {
+            resolutionSelect.value = wallpaperSettings.resolution;
+        }
+        
+        // Custom dimensions
+        if (wallpaperSettings.width && wallpaperSettings.height) {
+            const customWidth = document.getElementById('custom-width');
+            const customHeight = document.getElementById('custom-height');
+            if (customWidth) customWidth.value = wallpaperSettings.width;
+            if (customHeight) customHeight.value = wallpaperSettings.height;
+        }
+        
+        // Position
+        if (wallpaperSettings.position) {
+            const position = wallpaperSettings.position;
+            const customPosLeft = document.getElementById('custom-pos-left');
+            const customPosBottom = document.getElementById('custom-pos-bottom');
+            const customPosWidth = document.getElementById('custom-pos-width');
+            const customPosHeight = document.getElementById('custom-pos-height');
+            
+            if (customPosLeft) customPosLeft.value = position.left || -0.3;
+            if (customPosBottom) customPosBottom.value = position.bottom || -1.2;
+            if (customPosWidth) customPosWidth.value = position.width || 1.02;
+            if (customPosHeight) customPosHeight.value = position.height || 2.3;
+        }
+        
+        // Dark mode
+        const darkModeCheckbox = document.getElementById('dark-mode');
+        if (darkModeCheckbox) {
+            darkModeCheckbox.checked = wallpaperSettings.dark_mode || false;
+        }
+    }
+
+    /**
+     * Duplicate a configuration
+     */
+    async duplicateConfiguration(configName) {
+        const newName = prompt(`Enter a name for the copy of "${configName}":`, `${configName} Copy`);
+        if (!newName || newName.trim() === '') return;
+        
+        try {
+            const response = await this.apiClient.duplicateConfiguration(configName, newName.trim());
+            
+            if (response.success) {
+                this.showNotification(`Configuration duplicated as "${newName}"!`, 'success');
+                // Refresh the list
+                this.loadConfigurationsList();
+            } else {
+                this.showNotification('Failed to duplicate configuration', 'error');
+            }
+        } catch (error) {
+            console.error('Duplicate configuration error:', error);
+            this.showNotification('Failed to duplicate configuration: ' + (error.message || 'Unknown error'), 'error');
+        }
+    }
+
+    /**
+     * Delete a configuration
+     */
+    async deleteConfiguration(configName) {
+        if (!confirm(`Are you sure you want to delete the configuration "${configName}"?`)) {
+            return;
+        }
+        
+        try {
+            const response = await this.apiClient.deleteConfiguration(configName);
+            
+            if (response.success) {
+                this.showNotification(`Configuration "${configName}" deleted!`, 'success');
+                // Refresh the list
+                this.loadConfigurationsList();
+            } else {
+                this.showNotification('Failed to delete configuration', 'error');
+            }
+        } catch (error) {
+            console.error('Delete configuration error:', error);
+            this.showNotification('Failed to delete configuration: ' + (error.message || 'Unknown error'), 'error');
+        }
     }
 }
 

@@ -286,14 +286,14 @@
                 <form id="save-config-form">
                     <div class="mb-3">
                         <label for="config-name" class="form-label">Configuration Name</label>
-                        <input type="text" class="form-control" id="config-name" required>
+                        <input type="text" class="form-control" id="config-name" name="config-name" required>
                     </div>
                     <div class="mb-3">
                         <label for="config-description" class="form-label">Description (Optional)</label>
-                        <textarea class="form-control" id="config-description" rows="3"></textarea>
+                        <textarea class="form-control" id="config-description" name="config-description" rows="3"></textarea>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="config-public">
+                        <input class="form-check-input" type="checkbox" id="config-public" name="config-public">
                         <label class="form-check-label" for="config-public">
                             Make this configuration public
                         </label>
