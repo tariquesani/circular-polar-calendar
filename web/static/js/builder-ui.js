@@ -186,12 +186,80 @@ class BuilderUI {
 
         // Add event listeners to checkboxes
         container.querySelectorAll('.layer-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
+            checkbox.addEventListener('change', (event) => {
+                // Handle mutual exclusivity between Sunday and Holidays layers
+                this.handleLayerExclusivity(event.target);
+                
                 this.updateConfig();
                 this.updateLayerSpecificSettingsVisibility();
                 this.schedulePreviewUpdate();
             });
         });
+    }
+
+    /**
+     * Handle mutual exclusivity between conflicting layers
+     */
+    handleLayerExclusivity(checkbox) {
+        const layerId = checkbox.value;
+        
+        // Sunday and Holidays layers are mutually exclusive
+        if (layerId === 'sunday' && checkbox.checked) {
+            const holidaysCheckbox = document.getElementById('layer-holidays');
+            if (holidaysCheckbox && holidaysCheckbox.checked) {
+                holidaysCheckbox.checked = false;
+                this.showLayerNotification('Holidays layer unchecked - it includes Sunday labels');
+            }
+        }
+        
+        if (layerId === 'holidays' && checkbox.checked) {
+            const sundayCheckbox = document.getElementById('layer-sunday');
+            if (sundayCheckbox && sundayCheckbox.checked) {
+                sundayCheckbox.checked = false;
+                this.showLayerNotification('Sunday layer unchecked - Holidays layer includes Sunday labels');
+            }
+        }
+        
+        // Temperature and Precipitation layers are mutually exclusive
+        if (layerId === 'temperature' && checkbox.checked) {
+            const precipitationCheckbox = document.getElementById('layer-precipitation');
+            if (precipitationCheckbox && precipitationCheckbox.checked) {
+                precipitationCheckbox.checked = false;
+                this.showLayerNotification('Precipitation layer unchecked - only one weather layer can be active');
+            }
+        }
+        
+        if (layerId === 'precipitation' && checkbox.checked) {
+            const temperatureCheckbox = document.getElementById('layer-temperature');
+            if (temperatureCheckbox && temperatureCheckbox.checked) {
+                temperatureCheckbox.checked = false;
+                this.showLayerNotification('Temperature layer unchecked - only one weather layer can be active');
+            }
+        }
+    }
+
+    /**
+     * Show a brief notification for layer exclusivity
+     */
+    showLayerNotification(message) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; max-width: 300px;';
+        notification.innerHTML = `
+            <i class="bi bi-info-circle"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
     }
 
     /**

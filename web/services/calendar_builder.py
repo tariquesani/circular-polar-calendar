@@ -280,6 +280,9 @@ class CalendarBuilder:
                             self.dark_mode = config_dict['dark_mode']
                     
                     config.wallpaper = WallpaperConfig(wallpaper_config)
+                    
+                    # Disable Sunday layer for wallpaper format (like command line version)
+                    config.use_sunday_layer = False
                 else:
                     plotter_class = BaseCalendarPlotter
                 
