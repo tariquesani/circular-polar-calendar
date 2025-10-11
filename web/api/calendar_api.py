@@ -213,7 +213,11 @@ def serve_generated_file(filename):
     """Serve generated calendar files."""
     try:
         # Security: only allow files in the generated directory
-        file_path = os.path.join('generated', filename)
+        # Use absolute path to ensure we're looking in the right place
+        import os
+        current_dir = os.path.dirname(os.path.dirname(__file__))
+        generated_dir = os.path.join(current_dir, 'generated')
+        file_path = os.path.join(generated_dir, filename)
         
         if not os.path.exists(file_path):
             response.status = 404
@@ -233,7 +237,7 @@ def serve_generated_file(filename):
         # Set cache headers
         response.set_header('Cache-Control', 'public, max-age=3600')
         
-        return static_file(filename, root='generated')
+        return static_file(filename, root=generated_dir)
         
     except Exception as e:
         response.status = 500

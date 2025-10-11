@@ -27,13 +27,18 @@ class CalendarBuilderError(Exception):
 class CalendarBuilder:
     """Main service for building calendars from web configurations."""
     
-    def __init__(self, output_dir: str = "web/generated"):
+    def __init__(self, output_dir: str = None):
         """
         Initialize the calendar builder.
         
         Args:
             output_dir: Directory to store generated calendar files
         """
+        if output_dir is None:
+            # Use generated directory relative to the web directory
+            import os
+            current_dir = os.path.dirname(os.path.dirname(__file__))
+            output_dir = os.path.join(current_dir, "generated")
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         self.layer_registry = LayerRegistry()
