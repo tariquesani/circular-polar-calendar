@@ -27,9 +27,9 @@ class SavedConfiguration:
 class ConfigStorage:
     def __init__(self, storage_path=None):
         if storage_path is None:
-            # Use the project root storage folder
+            # Use the web directory storage folder
             import os
-            current_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            current_dir = os.path.dirname(os.path.dirname(__file__))
             storage_path = os.path.join(current_dir, "storage", "configurations")
         self.storage_path = storage_path
         os.makedirs(storage_path, exist_ok=True)
