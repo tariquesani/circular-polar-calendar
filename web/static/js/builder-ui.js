@@ -249,6 +249,23 @@ class BuilderUI {
                 this.showLayerNotification('Temperature layer unchecked - only one weather layer can be active');
             }
         }
+        
+        // Day and Dawn layers are mutually exclusive
+        if (layerId === 'day' && checkbox.checked) {
+            const dawnCheckbox = document.getElementById('layer-dawn');
+            if (dawnCheckbox && dawnCheckbox.checked) {
+                dawnCheckbox.checked = false;
+                this.showLayerNotification('Dawn layer unchecked - only one time period layer can be active');
+            }
+        }
+        
+        if (layerId === 'dawn' && checkbox.checked) {
+            const dayCheckbox = document.getElementById('layer-day');
+            if (dayCheckbox && dayCheckbox.checked) {
+                dayCheckbox.checked = false;
+                this.showLayerNotification('Day layer unchecked - only one time period layer can be active');
+            }
+        }
     }
 
     /**
