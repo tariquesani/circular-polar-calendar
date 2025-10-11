@@ -120,12 +120,47 @@
                     <!-- Wallpaper Settings (Hidden by default) -->
                     <div id="wallpaper-settings" style="display: none;">
                         <div class="mb-3">
-                            <label for="wallpaper-resolution" class="form-label">Resolution</label>
-                            <select class="form-select" id="wallpaper-resolution" name="wallpaper_resolution">
+                            <label for="resolution-select" class="form-label">Resolution</label>
+                            <select class="form-select" id="resolution-select">
                                 <option value="hd">HD (1920x1080)</option>
                                 <option value="4k">4K (3840x2160)</option>
+                                <option value="custom">Custom</option>
                             </select>
                         </div>
+                        
+                        <div id="custom-resolution-inputs" class="row g-2 mb-3" style="display: none;">
+                            <div class="col">
+                                <label for="custom-width" class="form-label">Width</label>
+                                <input type="number" class="form-control" id="custom-width" value="1920" min="100">
+                            </div>
+                            <div class="col">
+                                <label for="custom-height" class="form-label">Height</label>
+                                <input type="number" class="form-control" id="custom-height" value="1080" min="100">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Calendar Position</label>
+                            <div class="row g-2">
+                                <div class="col">
+                                    <label for="custom-pos-left" class="form-label">Left</label>
+                                    <input type="number" class="form-control" id="custom-pos-left" value="-0.3" step="0.01" min="-2" max="2">
+                                </div>
+                                <div class="col">
+                                    <label for="custom-pos-bottom" class="form-label">Bottom</label>
+                                    <input type="number" class="form-control" id="custom-pos-bottom" value="-1.2" step="0.01" min="-3" max="1">
+                                </div>
+                                <div class="col">
+                                    <label for="custom-pos-width" class="form-label">Width</label>
+                                    <input type="number" class="form-control" id="custom-pos-width" value="1.02" step="0.01" min="0.5" max="3">
+                                </div>
+                                <div class="col">
+                                    <label for="custom-pos-height" class="form-label">Height</label>
+                                    <input type="number" class="form-control" id="custom-pos-height" value="2.3" step="0.01" min="1" max="4">
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="dark-mode" name="dark_mode">
                             <label class="form-check-label" for="dark-mode">

@@ -325,12 +325,14 @@ class CalendarBuilder:
         
         dimensions = resolutions.get(resolution, resolutions['hd'])
         
-        # Calendar position (default: centered)
+        # Calendar position (defaults match calendar_wallpaper.py crop)
+        # These values intentionally place the polar chart partially off-canvas
+        # to achieve the wallpaper composition seen in Nagpur_Wallpaper.png
         position = wallpaper_settings.get('position', {
-            'left': 0.1,
-            'bottom': 0.1,
-            'width': 0.8,
-            'height': 0.8
+            'left': -0.3,
+            'bottom': -1.2,
+            'width': 1.02,
+            'height': 2.3
         })
         
         return {
@@ -364,12 +366,12 @@ class CalendarBuilder:
         # Add title
         plotter.add_title(plotter.ax)
 
-        # Add footer
-        plotter.add_footer(plotter.fig)
-
-        # Adjust layout
-        import matplotlib.pyplot as plt
-        plt.subplots_adjust(top=0.95, bottom=0.3)
+        # Add footer only for regular calendar format, not wallpaper
+        if not hasattr(plotter.config, 'wallpaper'):
+            plotter.add_footer(plotter.fig)
+            # Adjust layout only for regular calendar format
+            import matplotlib.pyplot as plt
+            plt.subplots_adjust(top=0.95, bottom=0.3)
     
     def _generate_preview(self, plotter: BaseCalendarPlotter, base_name: str, layers: List) -> Dict[str, Any]:
         """Generate preview version of calendar."""
@@ -377,12 +379,16 @@ class CalendarBuilder:
             # Create smaller preview
             preview_name = f"{base_name}_preview"
             png_path = self.output_dir / f"{preview_name}.png"
-            
             # Generate the plot manually
             self._create_calendar_plot(plotter, layers)
             
             # Save preview
-            plotter.fig.savefig(png_path, dpi=72, bbox_inches='tight', facecolor=plotter.config.colors['background'])
+            
+            # For wallpaper format, use exact dimensions like the original WallpaperCalendarPlotter
+            if hasattr(plotter.config, 'wallpaper'):
+                plotter.fig.savefig(png_path, dpi=72, bbox_inches=None, pad_inches=0, facecolor=plotter.config.colors['background'])
+            else:
+                plotter.fig.savefig(png_path, dpi=72, bbox_inches='tight', facecolor=plotter.config.colors['background'])
             import matplotlib.pyplot as plt
             plt.close(plotter.fig)
             
@@ -407,11 +413,17 @@ class CalendarBuilder:
             # Generate the plot manually
             self._create_calendar_plot(plotter, layers)
             
-            # Save PNG
-            plotter.fig.savefig(png_path, dpi=300, bbox_inches='tight', facecolor=plotter.config.colors['background'])
+            # Save PNG - use exact dimensions for wallpaper format
+            if hasattr(plotter.config, 'wallpaper'):
+                plotter.fig.savefig(png_path, dpi=300, bbox_inches=None, pad_inches=0, facecolor=plotter.config.colors['background'])
+            else:
+                plotter.fig.savefig(png_path, dpi=300, bbox_inches='tight', facecolor=plotter.config.colors['background'])
             
-            # Save PDF
-            plotter.fig.savefig(pdf_path, bbox_inches='tight', facecolor=plotter.config.colors['background'])
+            # Save PDF - use exact dimensions for wallpaper format
+            if hasattr(plotter.config, 'wallpaper'):
+                plotter.fig.savefig(pdf_path, bbox_inches=None, pad_inches=0, facecolor=plotter.config.colors['background'])
+            else:
+                plotter.fig.savefig(pdf_path, bbox_inches='tight', facecolor=plotter.config.colors['background'])
             
             import matplotlib.pyplot as plt
             plt.close(plotter.fig)

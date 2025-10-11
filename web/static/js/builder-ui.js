@@ -84,27 +84,7 @@ class BuilderUI {
 
         // Wallpaper settings
         document.getElementById('resolution-select')?.addEventListener('change', () => {
-            this.updateConfig();
-            this.schedulePreviewUpdate();
-        });
-        
-        document.getElementById('position-select')?.addEventListener('change', () => {
-            this.updateConfig();
-            this.schedulePreviewUpdate();
-        });
-        
-        document.getElementById('dark-mode')?.addEventListener('change', () => {
-            this.updateConfig();
-            this.schedulePreviewUpdate();
-        });
-        
-        // Custom resolution inputs
-        document.getElementById('custom-width')?.addEventListener('change', () => {
-            this.updateConfig();
-            this.schedulePreviewUpdate();
-        });
-        
-        document.getElementById('custom-height')?.addEventListener('change', () => {
+            this.toggleCustomResolution();
             this.updateConfig();
             this.schedulePreviewUpdate();
         });
@@ -126,6 +106,22 @@ class BuilderUI {
         });
         
         document.getElementById('custom-pos-height')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('dark-mode')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        // Custom resolution inputs
+        document.getElementById('custom-width')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('custom-height')?.addEventListener('change', () => {
             this.updateConfig();
             this.schedulePreviewUpdate();
         });
@@ -335,7 +331,6 @@ class BuilderUI {
      */
     updateWallpaperSettings() {
         const resolutionSelect = document.getElementById('resolution-select');
-        const positionSelect = document.getElementById('position-select');
         const darkModeCheckbox = document.getElementById('dark-mode');
         
         // Get resolution settings
@@ -357,32 +352,18 @@ class BuilderUI {
             height = res.height;
         }
         
-        // Get position settings
-        const position = positionSelect?.value || 'center';
-        let calendarPosition;
+        // Get position settings (always custom)
+        const customPosLeft = document.getElementById('custom-pos-left');
+        const customPosBottom = document.getElementById('custom-pos-bottom');
+        const customPosWidth = document.getElementById('custom-pos-width');
+        const customPosHeight = document.getElementById('custom-pos-height');
         
-        if (position === 'custom') {
-            const customPosLeft = document.getElementById('custom-pos-left');
-            const customPosBottom = document.getElementById('custom-pos-bottom');
-            const customPosWidth = document.getElementById('custom-pos-width');
-            const customPosHeight = document.getElementById('custom-pos-height');
-            
-            calendarPosition = {
-                left: parseFloat(customPosLeft?.value) || 0.1,
-                bottom: parseFloat(customPosBottom?.value) || 0.1,
-                width: parseFloat(customPosWidth?.value) || 0.8,
-                height: parseFloat(customPosHeight?.value) || 0.8
-            };
-        } else {
-            const positions = {
-                'center': { left: 0.1, bottom: 0.1, width: 0.8, height: 0.8 },
-                'top-left': { left: 0.05, bottom: 0.6, width: 0.4, height: 0.35 },
-                'top-right': { left: 0.55, bottom: 0.6, width: 0.4, height: 0.35 },
-                'bottom-left': { left: 0.05, bottom: 0.05, width: 0.4, height: 0.35 },
-                'bottom-right': { left: 0.55, bottom: 0.05, width: 0.4, height: 0.35 }
-            };
-            calendarPosition = positions[position] || positions['center'];
-        }
+        const calendarPosition = {
+            left: parseFloat(customPosLeft?.value) || -0.3,
+            bottom: parseFloat(customPosBottom?.value) || -1.2,
+            width: parseFloat(customPosWidth?.value) || 1.02,
+            height: parseFloat(customPosHeight?.value) || 2.3
+        };
         
         // Set wallpaper settings
         this.currentConfig.wallpaper = {
@@ -619,6 +600,19 @@ class BuilderUI {
             wallpaperSettings.style.display = formatType === 'wallpaper' ? 'block' : 'none';
         }
     }
+    
+    /**
+     * Toggle custom resolution inputs visibility
+     */
+    toggleCustomResolution() {
+        const resolutionSelect = document.getElementById('resolution-select');
+        const customInputs = document.getElementById('custom-resolution-inputs');
+        
+        if (resolutionSelect && customInputs) {
+            customInputs.style.display = resolutionSelect.value === 'custom' ? 'block' : 'none';
+        }
+    }
+    
 
     /**
      * Generate calendar
