@@ -39,10 +39,10 @@ from services.calendar_builder import CalendarBuilder
 def perform_startup_cleanup():
     """Perform automatic cleanup of old generated files on startup."""
     try:
-        print("Performing automatic cleanup of old generated files...")
+        # print("Performing automatic cleanup of old generated files...")
         calendar_builder = CalendarBuilder()
         calendar_builder.cleanup_old_files(max_age_days=7)  # Clean files older than 7 days
-        print("Automatic cleanup completed successfully.")
+        # print("Automatic cleanup completed successfully.")
     except Exception as e:
         print(f"Warning: Automatic cleanup failed: {str(e)}")
 
@@ -50,7 +50,32 @@ def perform_startup_cleanup():
 perform_startup_cleanup()
 
 # === Zeroconf Setup ===
+def check_existing_mdns_service(port=8080):
+    """Check if mDNS service is already running and return hostname if found."""
+    try:
+        zeroconf = Zeroconf()
+        hostname = socket.gethostname()
+        print(f"Hostname: {hostname}")
+        
+        # Check if we can resolve our own hostname
+        try:
+            ip = socket.gethostbyname(hostname)
+            print(f"Server is accessible at: {hostname}:{port}")
+            zeroconf.close()
+            return True
+        except socket.gaierror:
+            zeroconf.close()
+            return False
+    except Exception as e:
+        print(f"Error checking existing mDNS service: {e}")
+        return False
+
 def register_mdns_service(port=8080):
+    """Register mDNS service only if not already running."""
+    if check_existing_mdns_service(port):
+        print("mDNS service appears to already be running. Using existing hostname.")
+        return None
+    
     zeroconf = Zeroconf()
     hostname = socket.gethostname()
     ip = socket.gethostbyname(hostname)
@@ -65,7 +90,7 @@ def register_mdns_service(port=8080):
     )
 
     zeroconf.register_service(service_info)
-    print(f"Zeroconf service registered as 'tariquesani.local:{port}'")
+    # print(f"Zeroconf service registered as 'tariquesani.local:{port}'")
     return zeroconf
 
 # Mount configuration API routes
@@ -105,5 +130,6 @@ if __name__ == '__main__':
     try:
         run(app, host='0.0.0.0', port=port, debug=True)
     finally:
-        zeroconf.unregister_all_services()
-        zeroconf.close()
+        if zeroconf is not None:
+            zeroconf.unregister_all_services()
+            zeroconf.close()
