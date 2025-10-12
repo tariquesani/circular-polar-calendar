@@ -1,6 +1,8 @@
 from bottle import Bottle, run, template, static_file
 import os
 import sys
+import socket
+from zeroconf import Zeroconf, ServiceInfo
 
 # Add current directory to Python path for imports
 sys.path.insert(0, os.path.dirname(__file__))
@@ -31,6 +33,41 @@ from api.calendar_api import (
     list_layers, list_cities, list_themes, serve_generated_file, cleanup_files
 )
 
+# Import CalendarBuilder for automatic cleanup
+from services.calendar_builder import CalendarBuilder
+
+def perform_startup_cleanup():
+    """Perform automatic cleanup of old generated files on startup."""
+    try:
+        print("Performing automatic cleanup of old generated files...")
+        calendar_builder = CalendarBuilder()
+        calendar_builder.cleanup_old_files(max_age_days=7)  # Clean files older than 7 days
+        print("Automatic cleanup completed successfully.")
+    except Exception as e:
+        print(f"Warning: Automatic cleanup failed: {str(e)}")
+
+# Perform automatic cleanup on startup
+perform_startup_cleanup()
+
+# === Zeroconf Setup ===
+def register_mdns_service(port=8080):
+    zeroconf = Zeroconf()
+    hostname = socket.gethostname()
+    ip = socket.gethostbyname(hostname)
+
+    service_info = ServiceInfo(
+        type_="_http._tcp.local.",
+        name="Tarique EPD Server._http._tcp.local.",
+        addresses=[socket.inet_aton(ip)],
+        port=port,
+        properties={},
+        server="tariquesani.local."
+    )
+
+    zeroconf.register_service(service_info)
+    print(f"Zeroconf service registered as 'tariquesani.local:{port}'")
+    return zeroconf
+
 # Mount configuration API routes
 app.route('/api/configurations', method='GET')(list_configurations)
 app.route('/api/configurations', method='POST')(save_configuration)
@@ -51,15 +88,22 @@ app.route('/api/calendar/cleanup', method='POST')(cleanup_files)
 
 @app.route('/')
 def index():
-    return jinja_template('index.html', title='Calendar Builder')
+    return jinja_template('index.html', title='Home')
 
 @app.route('/builder')
 def builder():
-    return jinja_template('builder.html', title='Calendar Builder')
+    return jinja_template('builder.html', title='Builder')
 
 @app.route('/static/<filename:path>')
 def static(filename):
     return static_file(filename, root='static')
 
+# === Run Server ===
 if __name__ == '__main__':
-    run(app, host='localhost', port=8080, debug=True)
+    port = 8080
+    zeroconf = register_mdns_service(port)
+    try:
+        run(app, host='0.0.0.0', port=port, debug=True)
+    finally:
+        zeroconf.unregister_all_services()
+        zeroconf.close()
