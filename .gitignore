@@ -6,4 +6,4 @@ __pycache__*
 *.png
 *.pdf
 .env
-__init__.py
+
