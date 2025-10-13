@@ -196,22 +196,7 @@
                                     
                                     <!-- Layer-specific settings -->
                                     <div id="layer-specific-settings">
-                                        <!-- Strava Layer Settings -->
-                                        <div id="strava-settings" class="layer-settings" style="display: none;">
-                                            <h6 class="text-primary">Strava Settings</h6>
-                                            <div class="mb-3">
-                                                <label for="strava-running-target" class="form-label">Yearly Running Goal (km)</label>
-                                                <input type="number" class="form-control" id="strava-running-target" value="1000" min="100" max="10000" step="100">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="strava-footer-offset" class="form-label">Footer Offset</label>
-                                                <input type="number" class="form-control" id="strava-footer-offset" value="0" min="0" max="0.5" step="0.01">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="strava-footer-height" class="form-label">Footer Height</label>
-                                                <input type="number" class="form-control" id="strava-footer-height" value="0.1" min="0.05" max="0.3" step="0.01">
-                                            </div>
-                                        </div>
+                                        <!-- Other layer settings can be added here -->
                                     </div>
                                 </div>
                             </div>
@@ -273,6 +258,33 @@
         </div>
     </div>
 </div>
+
+<!-- HTML Template Fragments for Layer Settings -->
+<template id="strava-settings-template">
+    <div id="strava-settings" class="layer-settings mt-2" data-layer-id="strava" style="display: none;">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white py-2">
+                <h6 class="card-title mb-0" style="font-size: 0.9rem;">
+                    <i class="bi bi-activity"></i> Strava Settings
+                </h6>
+            </div>
+            <div class="card-body py-2">
+                <div class="mb-2">
+                    <label for="strava-running-target" class="form-label" style="font-size: 0.8rem;">Yearly Running Goal (km)</label>
+                    <input type="number" class="form-control form-control-sm" id="strava-running-target" value="1000" min="100" max="10000" step="100">
+                </div>
+                <div class="mb-2">
+                    <label for="strava-footer-offset" class="form-label" style="font-size: 0.8rem;">Footer Offset</label>
+                    <input type="number" class="form-control form-control-sm" id="strava-footer-offset" value="0" min="0" max="0.5" step="0.01">
+                </div>
+                <div class="mb-0">
+                    <label for="strava-footer-height" class="form-label" style="font-size: 0.8rem;">Footer Height</label>
+                    <input type="number" class="form-control form-control-sm" id="strava-footer-height" value="0.1" min="0.05" max="0.3" step="0.01">
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 
 <!-- Save Configuration Modal -->
 <div class="modal fade" id="saveConfigModal" tabindex="-1">

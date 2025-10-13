@@ -197,6 +197,9 @@ class BuilderUI {
             </div>
         `).join('');
 
+        // Add layer-specific settings using template fragments
+        this.addLayerSpecificSettings(container, layers);
+
         // Add event listeners to checkboxes
         container.querySelectorAll('.layer-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', (event) => {
@@ -208,6 +211,51 @@ class BuilderUI {
                 this.schedulePreviewUpdate();
             });
         });
+
+        // Add event listeners to layer settings inputs
+        this.attachLayerSettingsListeners();
+    }
+
+    /**
+     * Add layer-specific settings using template fragments
+     */
+    addLayerSpecificSettings(container, layers) {
+        layers.forEach(layer => {
+            if (layer.id === 'strava') {
+                const layerItem = container.querySelector(`[data-layer-id="${layer.id}"]`);
+                if (layerItem) {
+                    const template = document.getElementById('strava-settings-template');
+                    if (template) {
+                        const clonedContent = template.content.cloneNode(true);
+                        layerItem.appendChild(clonedContent);
+                    }
+                }
+            }
+            // Add more layer settings here as needed
+        });
+    }
+
+    /**
+     * Attach event listeners to layer settings inputs
+     */
+    attachLayerSettingsListeners() {
+        // Strava layer settings
+        document.getElementById('strava-running-target')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('strava-footer-offset')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        document.getElementById('strava-footer-height')?.addEventListener('change', () => {
+            this.updateConfig();
+            this.schedulePreviewUpdate();
+        });
+        
+        // Add more layer settings listeners here as needed
     }
 
     /**
