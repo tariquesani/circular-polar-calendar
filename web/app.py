@@ -33,6 +33,13 @@ from api.calendar_api import (
     list_layers, list_cities, list_themes, serve_generated_file, cleanup_files
 )
 
+# Import data API routes
+from api.data_api import (
+    generate_sun_weather, get_strava_auth_url, strava_callback,
+    generate_strava_data, get_strava_status, disconnect_strava,
+    list_data_files, download_data_file, delete_data_file
+)
+
 # Import CalendarBuilder for automatic cleanup
 from services.calendar_builder import CalendarBuilder
 
@@ -111,6 +118,17 @@ app.route('/api/calendar/themes', method='GET')(list_themes)
 app.route('/api/calendar/files/<filename>')(serve_generated_file)
 app.route('/api/calendar/cleanup', method='POST')(cleanup_files)
 
+# Mount data API routes
+app.route('/api/data/sun-weather', method='POST')(generate_sun_weather)
+app.route('/api/data/strava/auth-url', method='GET')(get_strava_auth_url)
+app.route('/api/data/strava/callback', method='GET')(strava_callback)
+app.route('/api/data/strava/generate', method='POST')(generate_strava_data)
+app.route('/api/data/strava/status', method='GET')(get_strava_status)
+app.route('/api/data/strava/disconnect', method='POST')(disconnect_strava)
+app.route('/api/data/files', method='GET')(list_data_files)
+app.route('/api/data/files/<filename>')(download_data_file)
+app.route('/api/data/files/<filename>', method='DELETE')(delete_data_file)
+
 @app.route('/')
 def index():
     return jinja_template('index.html', title='Home')
@@ -118,6 +136,10 @@ def index():
 @app.route('/builder')
 def builder():
     return jinja_template('builder.html', title='Builder')
+
+@app.route('/tools')
+def tools():
+    return jinja_template('tools.html', title='Data Tools')
 
 @app.route('/static/<filename:path>')
 def static(filename):

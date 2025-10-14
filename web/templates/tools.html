@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="bi bi-tools"></i> Data Generation Tools</h1>
+            <button type="button" class="btn btn-outline-secondary" onclick="refreshDataFiles()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh Files
+            </button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="toolsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sun-weather-tab" data-bs-toggle="tab" data-bs-target="#sun-weather" type="button" role="tab">
+                    <i class="bi bi-sun"></i> Sun & Weather Data
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="strava-tab" data-bs-toggle="tab" data-bs-target="#strava" type="button" role="tab">
+                    <i class="bi bi-activity"></i> Strava Activities
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab">
+                    <i class="bi bi-folder2-open"></i> Data Files
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="toolsTabsContent">
+            <!-- Sun & Weather Data Tab -->
+            <div class="tab-pane fade show active" id="sun-weather" role="tabpanel">
+                <div class="row mt-4">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-geo-alt"></i> Generate Sun & Weather Data
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="sunWeatherForm">
+                                    <div class="mb-3">
+                                        <label for="cityName" class="form-label">City Name</label>
+                                        <input type="text" class="form-control" id="cityName" name="city_name" 
+                                               placeholder="e.g., New York, London, Tokyo" required>
+                                        <div class="form-text">Enter the city name for which to generate data</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="year" class="form-label">Year</label>
+                                        <input type="number" class="form-control" id="year" name="year" 
+                                               min="1900" max="2100" value="2025" required>
+                                        <div class="form-text">Year for which to generate data</div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary" id="generateSunWeatherBtn">
+                                        <i class="bi bi-play-circle"></i> Generate Data
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-info-circle"></i> Generation Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="sunWeatherStatus">
+                                    <div class="text-muted">Ready to generate data...</div>
+                                </div>
+                                
+                                <div id="sunWeatherLocation" class="mt-3" style="display: none;">
+                                    <h6>Location Details:</h6>
+                                    <div id="locationInfo"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strava Activities Tab -->
+            <div class="tab-pane fade" id="strava" role="tabpanel">
+                <div class="row mt-4">
+                    <div class="col-lg-6">
+                        <!-- Authentication Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-shield-check"></i> Strava Authentication
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="stravaAuthStatus">
+                                    <div class="text-muted">Checking authentication status...</div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success" id="connectStravaBtn" style="display: none;">
+                                        <i class="bi bi-link-45deg"></i> Connect to Strava
+                                    </button>
+                                    
+                                    <button type="button" class="btn btn-danger" id="disconnectStravaBtn" style="display: none;">
+                                        <i class="bi bi-x-circle"></i> Disconnect
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Fetch Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-download"></i> Fetch Activities
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="stravaForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="startDate" class="form-label">Start Date</label>
+                                                <input type="date" class="form-control" id="startDate" name="start_date" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="endDate" class="form-label">End Date</label>
+                                                <input type="date" class="form-control" id="endDate" name="end_date" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="incremental" name="incremental">
+                                            <label class="form-check-label" for="incremental">
+                                                Incremental mode (fetch from last activity)
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Check this to fetch only new activities since the last run</div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary" id="fetchActivitiesBtn" disabled>
+                                        <i class="bi bi-download"></i> Fetch Activities
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-activity"></i> Fetch Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="stravaStatus">
+                                    <div class="text-muted">Authentication required...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Files Tab -->
+            <div class="tab-pane fade" id="files" role="tabpanel">
+                <div class="mt-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-folder2-open"></i> Data Files
+                            </h5>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshDataFiles()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="filesLoading" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="mt-2">Loading data files...</div>
+                            </div>
+                            
+                            <div id="filesList" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Filename</th>
+                                                <th>City</th>
+                                                <th>Year</th>
+                                                <th>Data Types</th>
+                                                <th>Size</th>
+                                                <th>Modified</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="filesTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="filesEmpty" style="display: none;">
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-folder-x" style="font-size: 3rem;"></i>
+                                    <div class="mt-2">No data files found</div>
+                                    <div>Generate some data using the tabs above</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteFileName"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set default dates for Strava form and initialize
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+    
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+    
+    // Initialize after a short delay to ensure tools-ui.js is loaded
+    setTimeout(() => {
+        if (window.toolsUI) {
+            window.toolsUI.checkStravaStatus();
+            window.toolsUI.refreshDataFiles();
+        }
+    }, 100);
+});
+</script>
+{% endblock %}
