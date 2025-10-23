@@ -86,16 +86,51 @@ def exchange_token():
 
 def fetch_activities(client, start_date, end_date):
     """Fetch and format Strava activities."""
-    return [{
-        "id": activity.id,
-        "name": activity.name,
-        "start_date": activity.start_date_local.isoformat(),
-        "distance": activity.distance,
-        "moving_time": activity.moving_time,
-        "elapsed_time": activity.elapsed_time,
-        "type": activity.type.root,
-        "average_speed": activity.average_speed
-    } for activity in client.get_activities(after=start_date, before=end_date)]
+    activities = list(client.get_activities(after=start_date, before=end_date))
+    
+    if not activities:
+        return []
+    
+    # Fetch detailed activity data for each activity
+    detailed_activities = []
+    for i, activity in enumerate(activities):
+        print(f"Fetching detailed data for activity {i+1}/{len(activities)}: {activity.name}")
+        try:
+            # Get detailed activity data
+            detailed_activity = client.get_activity(activity.id)
+            
+            detailed_activities.append({
+                "id": detailed_activity.id,
+                "name": detailed_activity.name,
+                "start_date": detailed_activity.start_date_local.isoformat(),
+                "distance": detailed_activity.distance,
+                "moving_time": detailed_activity.moving_time,
+                "elapsed_time": detailed_activity.elapsed_time,
+                "type": detailed_activity.type.root,
+                "average_speed": detailed_activity.average_speed,
+                # Optional fields: not all activities have calories or heart rate info
+                "calories": getattr(detailed_activity, 'calories', None),
+                "average_heartrate": getattr(detailed_activity, 'average_heartrate', None),
+                "max_heartrate": getattr(detailed_activity, 'max_heartrate', None)
+            })
+        except Exception as e:
+            print(f"Error fetching detailed data for activity {activity.id}: {e}")
+            # Fall back to basic data if detailed fetch fails
+            detailed_activities.append({
+                "id": activity.id,
+                "name": activity.name,
+                "start_date": activity.start_date_local.isoformat(),
+                "distance": activity.distance,
+                "moving_time": activity.moving_time,
+                "elapsed_time": activity.elapsed_time,
+                "type": activity.type.root,
+                "average_speed": activity.average_speed,
+                "calories": None,
+                "average_heartrate": None,
+                "max_heartrate": None
+            })
+    
+    return detailed_activities
 
 
 def get_last_activity_date():
