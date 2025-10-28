@@ -167,13 +167,45 @@ def main():
         else:
             print("No new activities found.")
             return
-        
-        if incremental and os.path.exists(OUTPUT_FILE):
-            existing_activities = json.load(open(OUTPUT_FILE))
-            activities = existing_activities + activities
 
-        json.dump(activities, open(OUTPUT_FILE, 'w'), indent=4)
-        print(f"Saved {len(activities)} activities to {OUTPUT_FILE}")
+        # Load existing activities if incremental mode is enabled
+        existing_activities = []
+        if incremental and os.path.exists(OUTPUT_FILE):
+            try:
+                existing_activities = json.load(open(OUTPUT_FILE))
+            except Exception as e:
+                print(f"Warning: could not read existing activities from {OUTPUT_FILE}: {e}")
+
+        # Combine existing and newly-fetched activities
+        combined = existing_activities + activities
+
+        # Deduplicate by activity id, preferring the activity with the later start_date
+        activity_by_id = {}
+        for a in combined:
+            aid = a.get("id")
+            if aid is None:
+                continue
+            if aid not in activity_by_id:
+                activity_by_id[aid] = a
+            else:
+                # keep the one with the newer start_date (assume more complete)
+                try:
+                    existing_dt = datetime.fromisoformat(activity_by_id[aid]["start_date"])
+                    new_dt = datetime.fromisoformat(a["start_date"])
+                    if new_dt > existing_dt:
+                        activity_by_id[aid] = a
+                except Exception:
+                    activity_by_id[aid] = a
+
+        # Sort activities chronologically: oldest first, latest last
+        try:
+            activities_sorted = sorted(activity_by_id.values(), key=lambda x: datetime.fromisoformat(x["start_date"]))
+        except Exception:
+            # Fallback to lexical sort of ISO strings
+            activities_sorted = sorted(activity_by_id.values(), key=lambda x: x.get("start_date", ""))
+
+        json.dump(activities_sorted, open(OUTPUT_FILE, 'w'), indent=4)
+        print(f"Saved {len(activities_sorted)} activities to {OUTPUT_FILE}")
 
     except Exception as e:
         print(f"Error: {e}")
