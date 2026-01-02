@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 class Config:
     city_name: str
     colors: dict
-    year: int = 2025
+    year: int = 2026
     smoothen: bool = False
     interval: float = 0.25
     # Add a kwargs field to capture additional attributes
